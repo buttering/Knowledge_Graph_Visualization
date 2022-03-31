@@ -26,12 +26,8 @@ HTTP GET
 {
   "code": 200,
   "msg": {
-    "nodes": [
-      {"databaseName": node name}  
-    ],
-    "relationships": [
-      {"relationshipName": relationship name}
-    ]
+    "nodes": [node name],
+    "edges": [relationship name]
 }
 ```
 
@@ -43,7 +39,7 @@ HTTP GET
 
 ### 1）address
 
-/graph/query
+/graph
 
 ### 2) type
 
@@ -53,13 +49,52 @@ HTTP POST
 
 对数据库进行查询，返回查询json结果。
 
-### 4） return
+### 4） request message formate
+
+```json
+{
+  "Cypher-sentiment": Cypher sentiment,
+  "Return-Type": Py2Neo object type list in Cypher sentiment by order
+}
+```
+
+Explanation："Return-Type"字段以列表的形式按顺序列出Cypher查询中RETURN子句的返回值类型
+
+返回值类型对应字段如下
+
+
+| type         | keyword |
+| -------------- | --------- |
+| node         | N       |
+| relationship | R       |
+|              |         |
+
+For example：有如下Cypher语句：`MATCH (n)-[r]-(m) RETURN n,r,m`,
+
+则Return-Type字段为["N", "R", "N]
+
+### 5） return
 
 ```json
 {
   "code": 200,
   "msg": {
-    "results": json object
+    "edges":[
+      {
+        "attribute": edge's attribute dict,
+        "source": source node id,
+        "target": target node id,
+        "type": edge type
+      }
+    ],
+    "nodes":[
+      {
+        "attribute": node's attribute dict,
+        "id": node id,
+        "label": node label
+      }
+    ]
+  
   }
 }
 ```
