@@ -253,8 +253,8 @@ HTTP POST/PUT/DELETE
 
 ```json
 {
-  "code": 400,
-  "msg":  To Be Supplemented...
+  "code": 411,
+  "msg": "Can't find node by this ID!"
 }
 ```
 
@@ -272,16 +272,38 @@ HTTP POST/PUT/DELETE
 
 对关系进行增加（POST）、删除（DELETE）以及对关系属性进行修改（PUT）。
 
-### 4）request body format
+### 4） request body format
+
+- POST
 
 ```json
 {
-  "Edge-Type": Relationship type,
+  "Edge-Type": Node type， which will be the label of node,
+  "Edge-Attribute": Dict of Relationship attributes,
+  "Source-Node": ID of source node,
+  "Target-Node": ID of target node
+
+}
+```
+
+- PUT
+
+```json
+{
+  "Edge-Id" : Relationship ID,
   "Edge-Attribute": Dict of relationship attributes
 }
 ```
 
-*notation：* 对节点属性进行修改必须把节点所有的属性（包括已存在的）传入。
+- DELETE
+
+```json
+{
+  "Edge-Id" : Relationship ID,
+}
+```
+
+*Notation：* 对关系属性进行修改必须把节点所有的属性（包括已存在的和新增的）传入。
 
 ### 5) return
 
@@ -291,7 +313,7 @@ HTTP POST/PUT/DELETE
 {
   "code": 200,
   "msg":{
-    "number": Number of changed relationshiops
+    "number": Number of changed relationships
   }
 }
 ```
@@ -300,8 +322,8 @@ HTTP POST/PUT/DELETE
 
 ```json
 {
-  "code": 400,
-  "msg": To Be Supplemented...
+  "code": 410,
+  "msg": "Can't find relationship by this ID!"
 }
 ```
 

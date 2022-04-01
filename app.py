@@ -1,7 +1,7 @@
 from flask import Flask, redirect, url_for, g, request, jsonify
 from neo4j import GraphDatabase
 from flask_restful_swagger_2 import Api, Resource
-from py2neo import Graph, Node, NodeMatcher, Subgraph
+from py2neo import Graph, Node, NodeMatcher, Subgraph, Relationship, RelationshipMatcher
 
 import config
 
@@ -70,14 +70,8 @@ class NodeRoute(Resource):
 
         # 不考虑重复节点
         graph.create(new_node)
-        graph.commit(graph.begin())
 
-        return jsonify({
-            "code": 200,
-            "msg": {
-                "number": 1
-            }
-        })
+        return return_deleted_relationship(1)
 
     def put(self):
         request_data = request.get_json()
@@ -85,7 +79,10 @@ class NodeRoute(Resource):
         node_id = request_data.get('Node-Id')
 
         node_matcher = NodeMatcher(graph)
-        changed_node = node_matcher[node_id]
+        try:
+            changed_node = node_matcher[node_id]
+        except KeyError:
+            return return_exception_code(411, "Can,t find node by this ID")
         changed_node.clear()  # 清楚所有属性
         changed_node.update(node_attributes)
 
@@ -93,28 +90,76 @@ class NodeRoute(Resource):
         tx.push(changed_node)
         tx.commit()
 
-        return jsonify({
-            "code": 200,
-            "msg": {
-                "number": 1
-            }
-        })
+        return return_deleted_relationship(1)
 
     def delete(self):
         request_data = request.get_json()
         node_id = request_data.get('Node-Id')
 
-        node_macher = NodeMatcher(graph)
-        deleted_node = node_macher[node_id]
-
+        node_matcher = NodeMatcher(graph)
+        try:
+            deleted_node = node_matcher[node_id]
+        except KeyError:
+            return return_exception_code(411, "Can,t find node by this ID")
         graph.delete(deleted_node)
 
-        return jsonify({
-            "code": 200,
-            "msg": {
-                "number": 1
-            }
-        })
+        return return_deleted_relationship(1)
+
+
+class RelationshipRoute(Resource):
+    def post(self):
+        request_data = request.get_json()
+        relationship_type = request_data.get('Edge-Type')
+        relationship_attribute = request_data.get('Edge-Attribute')
+        relationship_source_node_ID = request_data.get('Source-Node')
+        relationship_target_node_ID = request_data.get('Target-Node')
+
+        node_matcher = NodeMatcher(graph)
+        try:
+            start_node = node_matcher[relationship_source_node_ID]
+            end_node = node_matcher[relationship_target_node_ID]
+        except KeyError:
+            return return_exception_code(410, "Can't find relationship by this ID!")
+        new_relationship = Relationship(start_node, relationship_type, end_node)
+        new_relationship.update(relationship_attribute)
+
+        # 相同类型的关系最多有两条相反的边，但可以有多条不同类型的边
+        graph.create(new_relationship)
+
+        return return_deleted_relationship(1)
+
+    def put(self):
+        request_data = request.get_json()
+        relationship_ID = request_data.get('Edge-Id')
+        relationship_attribute = request_data.get('Edge-Attribute')
+
+        relationship_matcher = RelationshipMatcher(graph)
+        try:
+            changed_relationship = relationship_matcher[relationship_ID]
+        except KeyError:
+            return return_exception_code(410, "Can't find relationship by this ID!")
+        changed_relationship.clear()
+        changed_relationship.update(relationship_attribute)
+
+        tx = graph.begin()
+        tx.push(changed_relationship)
+        tx.commit()
+
+        return return_deleted_relationship(1)
+
+    def delete(self):
+        request_data = request.get_json()
+        relationship_ID = request_data.get('Edge-Id')
+
+        relationship_matcher = RelationshipMatcher(graph)
+        try:
+            deleted_relationship = relationship_matcher[relationship_ID]
+        except KeyError as e:
+            return return_exception_code(410, "Can't find relationship by this ID!")
+
+        graph.separate(deleted_relationship)
+
+        return return_deleted_relationship(1)
 
 
 class User(Resource):
@@ -183,6 +228,24 @@ def serialize_edge(edge):
     return data
 
 
+####### 返回格式化
+
+def return_deleted_relationship(number: int):
+    return jsonify({
+        "code": 200,
+        "msg": {
+            "number": number
+        }
+    })
+
+
+def return_exception_code(code: int, msg: str):
+    return jsonify({
+        "code": code,
+        "msg": msg
+    })
+
+
 #
 # driver = GraphDatabase.driver(config.DATABASE_URL, auth=(config.DATABASE_USERNAME, config.DATABASE_PASSWORD))
 #
@@ -221,6 +284,7 @@ api.add_resource(User, '/user')
 api.add_resource(Register, '/register')
 api.add_resource(Test, '/t')
 api.add_resource(NodeRoute, '/graph/node')
+api.add_resource(RelationshipRoute, '/graph/edge')
 
 
 def test():
