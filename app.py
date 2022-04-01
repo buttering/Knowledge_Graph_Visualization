@@ -1,7 +1,7 @@
 from flask import Flask, redirect, url_for, g, request, jsonify
 from neo4j import GraphDatabase
 from flask_restful_swagger_2 import Api, Resource
-from py2neo import Graph
+from py2neo import Graph, Node, NodeMatcher, Subgraph
 
 import config
 
@@ -38,9 +38,11 @@ class KnowledgeGraph(Resource):
                 "edges": list(relation_names)
             }
         }
+        # 自动将congtent-type改成application/json
         return jsonify(json_dic)
 
     def post(self):
+        # TODO: 检验是否是查询语句
         request_data = request.get_json()
         cypher_sentiment = request_data.get('Cypher-Sentiment')
         return_type = request_data.get('Return-Type')
@@ -54,6 +56,65 @@ class KnowledgeGraph(Resource):
         # print(json.dumps(result).replace('\\', ''))
         # return json.dumps(result).replace('\\', '')
         # return json.loads(str(result).replace('\'', '\"'))
+
+
+class NodeRoute(Resource):
+    def post(self):
+        request_data = request.get_json()
+        node_label = request_data.get('Node-Type')
+        node_attributes = request_data.get('Node-Attribute')
+
+        new_node = Node()
+        new_node.add_label(node_label)
+        new_node.update(node_attributes)
+
+        # 不考虑重复节点
+        graph.create(new_node)
+        graph.commit(graph.begin())
+
+        return jsonify({
+            "code": 200,
+            "msg": {
+                "number": 1
+            }
+        })
+
+    def put(self):
+        request_data = request.get_json()
+        node_attributes = request_data.get('Node-Attribute')
+        node_id = request_data.get('Node-Id')
+
+        node_matcher = NodeMatcher(graph)
+        changed_node = node_matcher[node_id]
+        changed_node.clear()  # 清楚所有属性
+        changed_node.update(node_attributes)
+
+        tx = graph.begin()
+        tx.push(changed_node)
+        tx.commit()
+
+        return jsonify({
+            "code": 200,
+            "msg": {
+                "number": 1
+            }
+        })
+
+    def delete(self):
+        request_data = request.get_json()
+        node_id = request_data.get('Node-Id')
+
+        node_macher = NodeMatcher(graph)
+        deleted_node = node_macher[node_id]
+
+        graph.delete(deleted_node)
+
+        return jsonify({
+            "code": 200,
+            "msg": {
+                "number": 1
+            }
+        })
 
 
 class User(Resource):
@@ -104,7 +165,7 @@ def exec_cypher(cypher_sentiment: str, return_type: list) -> dict:
 
 def serialize_node(node):
     data = {
-        "id": node.identity,
+        "<id>": node.identity,
         "label": list(node.labels)[0],
         "attribute": dict(node)
     }
@@ -113,12 +174,14 @@ def serialize_node(node):
 
 def serialize_edge(edge):
     data = {
+        "<id>": edge.identity,
         "source": edge.start_node.identity,
         "target": edge.end_node.identity,
         "type": type(edge).__name__,
         "attribute": dict(edge)
     }
     return data
+
 
 #
 # driver = GraphDatabase.driver(config.DATABASE_URL, auth=(config.DATABASE_USERNAME, config.DATABASE_PASSWORD))
@@ -157,6 +220,7 @@ api.add_resource(KnowledgeGraph, '/graph')
 api.add_resource(User, '/user')
 api.add_resource(Register, '/register')
 api.add_resource(Test, '/t')
+api.add_resource(NodeRoute, '/graph/node')
 
 
 def test():

@@ -14,7 +14,7 @@
 
 ### 2) type
 
-HTTP GET
+HTTP POST
 
 ### 3) description
 
@@ -49,7 +49,7 @@ HTTP POST
 
 对数据库进行查询，返回查询json结果。
 
-### 4） request message formate
+### 4） request body format
 
 ```json
 {
@@ -58,7 +58,7 @@ HTTP POST
 }
 ```
 
-Explanation："Return-Type"字段以列表的形式按顺序列出Cypher查询中RETURN子句的返回值类型
+*Explanation：*"Return-Type"字段以列表的形式按顺序列出Cypher查询中RETURN子句的返回值类型
 
 返回值类型对应字段如下
 
@@ -69,7 +69,7 @@ Explanation："Return-Type"字段以列表的形式按顺序列出Cypher查询�
 | relationship | R       |
 |              |         |
 
-For example：有如下Cypher语句：`MATCH (n)-[r]-(m) RETURN n,r,m`,
+*For example：*有如下Cypher语句：`MATCH (n)-[r]-(m) RETURN n,r,m`,
 
 则Return-Type字段为["N", "R", "N]
 
@@ -81,6 +81,7 @@ For example：有如下Cypher语句：`MATCH (n)-[r]-(m) RETURN n,r,m`,
   "msg": {
     "edges":[
       {
+        "<id>: edge's identity
         "attribute": edge's attribute dict,
         "source": source node id,
         "target": target node id,
@@ -89,8 +90,8 @@ For example：有如下Cypher语句：`MATCH (n)-[r]-(m) RETURN n,r,m`,
     ],
     "nodes":[
       {
+        "<id>": node's identity,
         "attribute": node's attribute dict,
-        "id": node id,
         "label": node label
       }
     ]
@@ -147,7 +148,7 @@ HTTP GET/POST
 
 用户注册操作，GET用于请求注册页面，POST用于提交注册信息
 
-### 4） request message formate(post)
+### 4） request body format(post)
 
 ```json
 {
@@ -188,6 +189,119 @@ HTTP GET/POST
 {
   "code": 403,
   "msg": "Incorrect Password Format"
+}
+```
+
+## 5. 节点操作
+
+### 1）address
+
+/graph/node
+
+## 2) type
+
+HTTP POST/PUT/DELETE
+
+### 3) description
+
+对节点进行增加（POST）、删除（DELETE）以及对节点属性进行修改（PUT）
+
+### 4） request body format
+
+- POST
+
+```json
+{
+  "Node-Type": Node type， which will be the label of node,
+  "Node-Attribute": Dict of node attributes
+}
+```
+
+- PUT
+
+```json
+{
+  "Node-Id" : Node ID,
+  "Node-Attribute": Dict of node attributes
+}
+```
+
+- DELETE
+
+```json
+{
+  "Node-Id" : Node ID,
+}
+```
+
+*Notation：* 对节点属性进行修改必须把节点所有的属性（包括已存在的和新增的）传入。
+
+### 5) return
+
+- success
+
+```json
+{
+  "code": 200,
+  "msg":{
+    "number": Number of changed nodes
+  }
+}
+```
+
+- failure
+
+```json
+{
+  "code": 400,
+  "msg":  To Be Supplemented...
+}
+```
+
+## 6. 关系操作
+
+### 1) address
+
+/graph/edge
+
+### 2) type
+
+HTTP POST/PUT/DELETE
+
+### 3) description
+
+对关系进行增加（POST）、删除（DELETE）以及对关系属性进行修改（PUT）。
+
+### 4）request body format
+
+```json
+{
+  "Edge-Type": Relationship type,
+  "Edge-Attribute": Dict of relationship attributes
+}
+```
+
+*notation：* 对节点属性进行修改必须把节点所有的属性（包括已存在的）传入。
+
+### 5) return
+
+- success
+
+```json
+{
+  "code": 200,
+  "msg":{
+    "number": Number of changed relationshiops
+  }
+}
+```
+
+- failure
+
+```json
+{
+  "code": 400,
+  "msg": To Be Supplemented...
 }
 ```
 
