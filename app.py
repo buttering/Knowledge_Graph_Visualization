@@ -82,7 +82,7 @@ class NodeRoute(Resource):
         try:
             changed_node = node_matcher[node_id]
         except KeyError:
-            return return_exception_code(411, "Can,t find node by this ID")
+            return return_exception_code(411, "Can,t find node by this ID!")
         changed_node.clear()  # 清楚所有属性
         changed_node.update(node_attributes)
 
