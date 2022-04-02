@@ -1,10 +1,36 @@
 # Designed for undergraduate graduation project
 
-## 界面设计目标
+# Run the project:
+
+## Start the back-end.
+
+1. Start neo4j(need java11+)
+
+```powershell
+cd [neo4j installation directory]\bin
+neo4j.bat console
+```
+
+2. Start flask
+
+```powershell
+cd [project directory]
+set FLASK_APP=app.py
+flask run
+```
+
+## Start the front-end.
+
+```powershell
+cd [porject directory]/client
+npm run serve
+```
+
+# 界面设计目标
 
 仿照Neo4j Bloom设计一个能进行可视化展示和查询的界面，同时添加可视化编辑功能。
 
-# interfaces between backend and frontend
+# Interfaces between backend and frontend
 
 ## 1.请求首页
 
