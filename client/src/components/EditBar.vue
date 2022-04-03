@@ -1,9 +1,12 @@
 <template>
-  <button @click="add_node">ADD NODE</button>
-  <button @click="add_edge">REMOVE RELATIONSHIP</button>
-  <button @click="edit_attribute">EDIT ATTRIBUTE</button>
-  <button @click="delete_ele">DELETE THIS</button>
+  <button @click="add_node">add_node</button>
+  <button @click="edit_node_attribute">edit_node_attribute</button>
+  <button @click="delete_node">delete_node</button><div/>
+  <button @click="add_edge">add_edge</button>
+  <button @click="edit_edge_attribute">edit_edge_attribute</button>
+  <button @click="delete_edge">delete_edge</button><div/>
   <button @click="test">test</button>
+
   <div>{{clicked_ele_id}}</div>
 </template>
 
@@ -50,10 +53,14 @@ export default {
     },
 
     add_edge(){
+      // this.new_ele_type = "family"
+      // this.new_ele_attribute = {"time": 1, "lise": "very"}
+      // this.new_edge_target_id = 176
+      // this.new_edge_source_id = 174
       let data = {
         "Edge-Type": this.new_ele_type,
         "Edge-Attribute": this.new_ele_attribute,
-        "Source_Node": this.new_edge_source_id,
+        "Source-Node": this.new_edge_source_id,
         "Target-Node": this.new_edge_target_id
       }
       let url = config.graph_edge_url
@@ -63,6 +70,7 @@ export default {
 
     edit_node_attribute(){
       this.new_ele_attribute = this.clicked_ele_attribute
+      // this.new_ele_attribute = {'name':'Wang', 'age': 13, 'weight': 15}
       // TODO:对属性进行修改
       let data = {
         "Node-Id": this.clicked_ele_id,
@@ -75,9 +83,10 @@ export default {
 
     edit_edge_attribute(){
       this.new_ele_attribute = this.clicked_ele_attribute
+      // this.new_ele_attribute = {"like": "very", "time": 2}
       // TODO:对属性进行修改
       let data = {
-        "Edge-Type": this.clicked_ele_id,
+        "Edge-Id": this.clicked_ele_id,
         "Edge-Attribute": this.new_ele_attribute
       }
       let url = config.graph_edge_url
@@ -92,7 +101,7 @@ export default {
       }
       let url = config.graph_node_url
       let type = 'delete'
-      this.send_request(data, url, type)
+      this.send_request(url, data, type)
     },
 
     delete_edge(){
@@ -101,10 +110,17 @@ export default {
       }
       let url = config.graph_edge_url
       let type = 'delete'
-      this.send_request(data, url, type)
+      this.send_request(url, data, type)
     },
 
     test(){
+      this.new_ele_type = 'Animal'
+      this.new_ele_attribute = {"age": 1, "name": "bob"}
+      this.add_node()
+      this.new_ele_attribute = {"name": "pop", age: 2}
+      this.add_node()
+      this.new_ele_attribute = {"name": "kavien", age: 3}
+      this.add_node()
 
     }
   }

@@ -7,6 +7,7 @@
   <edit-bar
       :clicked_ele_id="click_ele_id"
       :clicked_ele_type="click_ele_type"
+      :clicked_ele_attribute="click_ele_attribute"
   ></edit-bar>
 </template>
 
@@ -20,8 +21,10 @@ export default {
   data(){
     return {
       title: "Knowledge",
+      // click_ele_id: 251,
       click_ele_id: -1,
-      click_ele_type: ""
+      click_ele_type: "",
+      click_ele_attribute: {}
     }
   },
   props:{

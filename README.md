@@ -107,7 +107,7 @@ HTTP POST
   "msg": {
     "edges":[
       {
-        "<id>: edge's identity
+        "<id>": edge's identity
         "attribute": edge's attribute dict,
         "source": source node id,
         "target": target node id,
