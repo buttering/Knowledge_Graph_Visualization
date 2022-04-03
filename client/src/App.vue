@@ -3,12 +3,14 @@
   <HelloWorld msg="Welcome to Your Vue.js App"/>
   <button @click="send_request">1</button>
   <div>{{msg}}</div>
-  <KnowledgeGraph/>
+  <KnowledgeGraph></KnowledgeGraph>
+
 </template>
 
 <script>
 import HelloWorld from './components/HelloWorld.vue'
 import KnowledgeGraph from './components/KnowledgeGraph'
+
 import config from '../config.js'
 
 import axios from 'axios'
@@ -18,22 +20,25 @@ export default {
   name: 'App',
   data(){
     return{
-      msg: "a"
+      msg: "a",
+      node_name_list: [],
+      edge_name_list: []
     }
-  },
-  props:{
-    node_list: Array,
-    edge_list: Array
   },
   methods:{
     send_request(){
-      console.log('aaa')
+      this.node_list = ['a']
       this.msg = 'c'
+      console.log(this.node_list)
+
+    }
+  },
+  created(){
+    var that = this
       axios.get(config.graph_url).then(function (response){
-        console.log(response.data)
-        alert(response.data)
-        alert('aaa')
-        this.msg = 'b'
+        // 回调函数中this指向会改变，所以先用that保存Vue对象指针
+        that.node_name_list = response.data.msg.nodes
+        that.edge_name_list = response.data.msg.edges
       }).catch(error=>{
         if (error.response) {
           // 请求已发出，且服务器的响应状态码超出了 2xx 范围
@@ -51,16 +56,6 @@ export default {
         }
         console.log(error.config);
     });
-
-    }
-  },
-  created(){
-    axios.get(config.graph_url)
-        .then(function (response){
-          console.log(response.data)
-          alert(response.data)
-          alert('aaa')
-    })
 
   },
   components: {

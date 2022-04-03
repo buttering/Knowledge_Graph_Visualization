@@ -32,7 +32,7 @@ npm run serve
 
 # Interfaces between backend and frontend
 
-## 1.请求首页
+## 1.请求图数据
 
 ### 1）address
 
@@ -40,11 +40,11 @@ npm run serve
 
 ### 2) type
 
-HTTP POST
+HTTP GET
 
 ### 3) description
 
-默认页面，进入后先鉴权。验证通过后返回一个可视化页面。未登录时会被重定向到登录界面。
+先鉴权，通过后返回节点和边的名称信息
 
 ### 4） return
 
@@ -79,7 +79,7 @@ HTTP POST
 
 ```json
 {
-  "Cypher-sentiment": Cypher sentiment,
+  "Cypher-Sentiment": Cypher sentiment,
   "Return-Type": Py2Neo object type list in Cypher sentiment by order
 }
 ```

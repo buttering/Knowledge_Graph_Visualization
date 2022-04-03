@@ -46,7 +46,9 @@ class KnowledgeGraph(Resource):
         request_data = request.get_json()
         cypher_sentiment = request_data.get('Cypher-Sentiment')
         return_type = request_data.get('Return-Type')
+        print("get query: ", cypher_sentiment)
         result = exec_cypher(cypher_sentiment, return_type)
+        print("return msg number: nodes-", len(result['nodes']), " edges-",len(result['edges']))
         json_dic = {
             "code": 200,
             "msg": result
