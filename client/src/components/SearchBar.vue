@@ -10,9 +10,12 @@ export default {
   name: "SearchBar",
   data(){
     return {
-      edge_list: [],
-      node_list: []
+
     }
+  },
+  props: {
+    edge_list: Array,
+    node_list: Array
   },
   methods:{
     search(){

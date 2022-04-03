@@ -1,9 +1,9 @@
 <template>
-  <div id="chart" style="width: 600px;height:400px;">bbb</div>
-  <div>{{query_result}}</div>
-  <button @click="test_click_node">click node 1</button>
-  <button @click="test_click_node_2">click node 2</button>
-  <SearchBar></SearchBar>
+  <div id="chart" style="width:100%;height:400%;">bbb</div>
+  <SearchBar
+      :node_list="node_list"
+      :edge_list="edge_list"
+  ></SearchBar>
   <div></div>
   <edit-bar
       :clicked_ele_id="click_ele_id"
@@ -45,7 +45,7 @@ export default {
             CanvasRenderer,
             GridComponent
         ])
-      // const that = this
+      let that = this
       if (!this.myChart){
         this.myChart = echarts.init(document.getElementById('chart'), 'dark')
       }
@@ -62,28 +62,24 @@ export default {
           }
         ]
       }
-      window.onresize = this.myChart.resize
       this.myChart.setOption(option)
-
+      window.onresize = function (){
+        that.myChart.resize()
+      }
     },
-
-    test_click_node(){
-      this.click_ele_id = 1
-    },
-    test_click_node_2(){
-      this.click_ele_id = 2
-    }
   },
   watch: {
     // 该回调会在任何被侦听的对象的 property 改变时被调用，不论其被嵌套多深
     query_result: {
       handler(val, old){
-        console.log(val, old)
-        this.init_charts()
+        // TODO:更新图标
+        console.log('query_result has changed:', val, old)
       }
     }
   },
   mounted() {
+    this.init_charts()
+    // TODO:查询所有元素
     this.query_result = {'aaa': 111}
   },
   components: {

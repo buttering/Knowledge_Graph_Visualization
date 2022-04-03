@@ -5,9 +5,8 @@
   <button @click="add_edge">add_edge</button>
   <button @click="edit_edge_attribute">edit_edge_attribute</button>
   <button @click="delete_edge">delete_edge</button><div/>
-  <button @click="test">test</button>
 
-  <div>{{clicked_ele_id}}</div>
+  <div>clicked_eld_id: {{clicked_ele_id}}</div>
 </template>
 
 <script>
@@ -111,17 +110,6 @@ export default {
       let url = config.graph_edge_url
       let type = 'delete'
       this.send_request(url, data, type)
-    },
-
-    test(){
-      this.new_ele_type = 'Animal'
-      this.new_ele_attribute = {"age": 1, "name": "bob"}
-      this.add_node()
-      this.new_ele_attribute = {"name": "pop", age: 2}
-      this.add_node()
-      this.new_ele_attribute = {"name": "kavien", age: 3}
-      this.add_node()
-
     }
   }
 }

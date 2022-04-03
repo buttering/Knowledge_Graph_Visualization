@@ -1,14 +1,8 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
-  <div>{{msg}}</div>
   <KnowledgeGraph :node_list="node_name_list" :edge_list="edge_name_list"></KnowledgeGraph>
-  <button @click="change_node_name_list">change_node_name_list</button>
-
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
 import KnowledgeGraph from './components/KnowledgeGraph'
 
 import config from '../config.js'
@@ -20,15 +14,13 @@ export default {
   name: 'App',
   data(){
     return{
-      msg: "a",
+      // 以下两个变量需要传递给SearchBar
       node_name_list: [],
       edge_name_list: []
     }
   },
   methods:{
-    change_node_name_list(){
-      this.node_name_list = ['aaa', 'bbb']
-    }
+
   },
   created(){
     var that = this
@@ -57,7 +49,6 @@ export default {
 
   },
   components: {
-    HelloWorld,
     KnowledgeGraph
   }
 }
