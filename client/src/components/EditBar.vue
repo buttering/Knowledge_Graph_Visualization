@@ -26,7 +26,7 @@ export default {
   props:{
     clicked_ele_id: Number,
     clicked_ele_type: String,
-    clicked_ele_attribute: String
+    clicked_ele_attribute: Object
   },
   methods:{
     send_request(url, data, type){

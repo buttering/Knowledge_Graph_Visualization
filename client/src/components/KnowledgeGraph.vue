@@ -1,5 +1,5 @@
 <template>
-  <div id="chart" style="width:100%;height:400%;">bbb</div>
+  <div id="chart" style="width: 100%;height: 100%"></div>
   <SearchBar
       :node_list="node_list"
       :edge_list="edge_list"
@@ -17,7 +17,7 @@ import SearchBar from "@/components/SearchBar";
 import EditBar from "@/components/EditBar";
 
 import * as echarts from 'echarts/core'
-import {BarChart} from 'echarts/charts'
+import {BarChart, PieChart} from 'echarts/charts'
 import {TitleComponent, GridComponent} from 'echarts/components'
 import {CanvasRenderer} from 'echarts/renderers'
 
@@ -43,7 +43,8 @@ export default {
             BarChart,
             TitleComponent,
             CanvasRenderer,
-            GridComponent
+            GridComponent,
+            PieChart
         ])
       let that = this
       if (!this.myChart){
@@ -51,21 +52,40 @@ export default {
       }
 
       var option = {
-        xAxis: {
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-        },
-        yAxis: {},
         series: [
           {
-            type: 'bar',
-            data: [23, 24, 18, 25, 27, 28, 25]
+            type: 'pie',
+            data: [
+              {
+                value: 335,
+                name: '直接访问'
+              },
+              {
+                value: 234,
+                name: '联盟广告'
+              },
+              {
+                value: 1548,
+                name: '搜索引擎'
+              }
+            ]
           }
         ]
-      }
+      };
       this.myChart.setOption(option)
       window.onresize = function (){
         that.myChart.resize()
       }
+      // window.onresize = function (){
+      //   function getStyle(el, name){
+      //     if (window.getComputedStyle){
+      //       return window.getComputedStyle(el, null)
+      //     }else{
+      //       return el.cuttentStyle
+      //     }
+      //   }
+      //   var wi = getStyle()
+      // }
     },
   },
   watch: {
