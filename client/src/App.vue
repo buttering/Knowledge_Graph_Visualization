@@ -1,9 +1,9 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png">
   <HelloWorld msg="Welcome to Your Vue.js App"/>
-  <button @click="send_request">1</button>
   <div>{{msg}}</div>
-  <KnowledgeGraph></KnowledgeGraph>
+  <KnowledgeGraph :node_list="node_name_list" :edge_list="edge_name_list"></KnowledgeGraph>
+  <button @click="change_node_name_list">change_node_name_list</button>
 
 </template>
 
@@ -26,11 +26,8 @@ export default {
     }
   },
   methods:{
-    send_request(){
-      this.node_list = ['a']
-      this.msg = 'c'
-      console.log(this.node_list)
-
+    change_node_name_list(){
+      this.node_name_list = ['aaa', 'bbb']
     }
   },
   created(){
@@ -39,6 +36,7 @@ export default {
         // 回调函数中this指向会改变，所以先用that保存Vue对象指针
         that.node_name_list = response.data.msg.nodes
         that.edge_name_list = response.data.msg.edges
+
       }).catch(error=>{
         if (error.response) {
           // 请求已发出，且服务器的响应状态码超出了 2xx 范围

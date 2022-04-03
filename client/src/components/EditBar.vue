@@ -15,7 +15,7 @@ import config from "../../config";
 import axios from "axios";
 
 export default {
-  name: "ModifyBar",
+  name: "EditBar",
   data(){
     return {
       new_ele_type: "",
