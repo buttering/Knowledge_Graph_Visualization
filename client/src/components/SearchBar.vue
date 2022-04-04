@@ -14,8 +14,8 @@ export default {
     }
   },
   props: {
-    edge_list: Array,
-    node_list: Array
+    edge_name_list: Array,
+    node_name_list: Array
   },
   methods:{
     search(){

@@ -1,8 +1,8 @@
 <template>
   <div id="chart" style="width: 100%;height: 100%"></div>
   <SearchBar
-      :node_list="node_list"
-      :edge_list="edge_list"
+      :node_name_list="node_name_list"
+      :edge_name_list="edge_name_list"
   ></SearchBar>
   <div></div>
   <edit-bar
@@ -29,13 +29,15 @@ export default {
       // click_ele_id: 251,
       click_ele_id: -1,
       click_ele_type: "",
-      click_ele_attribute: {},
-      query_result:{}  // 返回查询结果,用于可视化展示
+      click_ele_attribute: {}
+
     }
   },
   props:{
-    node_list: Array,
-    edge_list: Array
+    node_name_list: Array,
+    edge_name_list: Array,
+    nodes: Array,
+    edges: Array
   },
   methods:{
     init_charts(){

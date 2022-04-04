@@ -1,5 +1,10 @@
 <template>
-  <KnowledgeGraph :node_list="node_name_list" :edge_list="edge_name_list"></KnowledgeGraph>
+  <KnowledgeGraph
+      :node_name_list="node_name_list"
+      :edge_name_list="edge_name_list"
+      :nodes="nodes"
+      :edges="edges"
+  ></KnowledgeGraph>
 </template>
 
 <script>
@@ -16,7 +21,10 @@ export default {
     return{
       // 以下两个变量需要传递给SearchBar
       node_name_list: [],
-      edge_name_list: []
+      edge_name_list: [],
+      // 以下两个两个变量传递给KnowledgeGraph
+      nodes: [],
+      edges: []
     }
   },
   methods:{
@@ -26,9 +34,11 @@ export default {
     var that = this
       axios.get(config.graph_url).then(function (response){
         // 回调函数中this指向会改变，所以先用that保存Vue对象指针
-        that.node_name_list = response.data.msg.nodes
-        that.edge_name_list = response.data.msg.edges
-
+        that.node_name_list = response.data.msg.node_name_list
+        that.edge_name_list = response.data.msg.edge_name_list
+        that.nodes = response.data.msg.nodes
+        that.edges = response.data.msg.edges
+        console.log(response.data.msg)
       }).catch(error=>{
         if (error.response) {
           // 请求已发出，且服务器的响应状态码超出了 2xx 范围

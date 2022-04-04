@@ -8,7 +8,7 @@
 
 ```powershell
 cd [neo4j installation directory]\bin
-neo4j.bat console
+./neo4j.bat console
 ```
 
 2. Start flask
@@ -44,7 +44,7 @@ HTTP GET
 
 ### 3) description
 
-先鉴权，通过后返回节点和边的名称信息
+先鉴权，通过后返回所有节点和关系信息，并单独给出节点名和关系名列表
 
 ### 4） return
 
@@ -52,8 +52,24 @@ HTTP GET
 {
   "code": 200,
   "msg": {
-    "nodes": [node name],
-    "edges": [relationship name]
+    "node_name_list": [node name],
+    "edge_name_list": [relationship name],
+    "nodes":[
+      {
+        "<id>": node's identity,
+        "attribute": node's attribute dict,
+        "label": node label
+      }
+    ],
+    "edges":[
+      {
+        "<id>": edge's identity,
+        "attribute": edge's attribute dict,
+        "source": source node id,
+        "target": target node id,
+        "type": edge type
+      }
+    ]
 }
 ```
 

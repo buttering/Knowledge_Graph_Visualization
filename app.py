@@ -14,28 +14,26 @@ graph = Graph(config.DATABASE_URL, auth=(config.DATABASE_USERNAME, config.DATABA
 
 ######## 路由操作
 
-@app.route('/')
-def hello_world():
-    return redirect(url_for('graph'))
-
 
 class KnowledgeGraph(Resource):
     def get(self):
-        GET_ALL_NODES = 'MATCH (n) RETURN labels(n)'
-        GET_ALL_RELATIONS = 'MATCH(n)-[r]-(m) RETURN type(r)'
-        results1 = graph.run(GET_ALL_NODES)
-        results2 = graph.run(GET_ALL_RELATIONS)
+        GET_ALL_NODES = 'MATCH (n) RETURN n'
+        GET_ALL_RELATIONS = 'MATCH()-[r]-() RETURN r'
+        results1 = exec_cypher(GET_ALL_NODES, ['N'])
+        results2 = exec_cypher(GET_ALL_RELATIONS, ['R'])
         node_names = set()
         relation_names = set()
-        for item in results1.data():
-            node_names = node_names.union(set(item['labels(n)']))
-        for item in results2.data():
-            relation_names = relation_names.union({item['type(r)']})
+        for item in results1['nodes']:
+            node_names = node_names.union({item['label']})
+        for item in results2['edges']:
+            relation_names = relation_names.union({item['type']})
         json_dic = {
             "code": 200,
             "msg": {
-                "nodes": list(node_names),
-                "edges": list(relation_names)
+                "node_name_list": list(node_names),
+                "edge_name_list": list(relation_names),
+                "nodes": results1['nodes'],
+                "edges": results2['edges']
             }
         }
         # 自动将congtent-type改成application/json
@@ -48,7 +46,7 @@ class KnowledgeGraph(Resource):
         return_type = request_data.get('Return-Type')
         print("get query: ", cypher_sentiment)
         result = exec_cypher(cypher_sentiment, return_type)
-        print("return msg number: nodes-", len(result['nodes']), " edges-",len(result['edges']))
+        print("return msg number: nodes-", len(result['nodes']), " edges-", len(result['edges']))
         json_dic = {
             "code": 200,
             "msg": result
@@ -207,7 +205,7 @@ def exec_cypher(cypher_sentiment: str, return_type: list) -> dict:
     # 格式化节点和对象，以字典的列表存储
     nodes = list(map(serialize_node, node_list))
     edges = list(map(serialize_edge, edge_list))
-    return {"nodes": nodes, "edges:": edges}
+    return {"nodes": nodes, "edges": edges}
 
 
 def serialize_node(node):
