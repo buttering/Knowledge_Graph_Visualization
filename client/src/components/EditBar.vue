@@ -1,12 +1,13 @@
 <template>
-  <button @click="add_node">add_node</button>
-  <button @click="edit_node_attribute">edit_node_attribute</button>
-  <button @click="delete_node">delete_node</button><div/>
-  <button @click="add_edge">add_edge</button>
-  <button @click="edit_edge_attribute">edit_edge_attribute</button>
-  <button @click="delete_edge">delete_edge</button><div/>
-
-  <div>clicked_eld_id: {{clicked_ele_id}}</div>
+  <div id="edit-bar" v-if="clicked">
+    <button @click="add_node">add_node</button>
+    <button @click="edit_node_attribute">edit_node_attribute</button>
+    <button @click="delete_node">delete_node</button><div/>
+    <button @click="add_edge">add_edge</button>
+    <button @click="edit_edge_attribute">edit_edge_attribute</button>
+    <button @click="delete_edge">delete_edge</button><div/>
+    <div>clicked_eld_id: {{clicked_ele_id}}</div>
+  </div>
 </template>
 
 <script>
@@ -20,10 +21,11 @@ export default {
       new_ele_type: "",
       new_ele_attribute: {},
       new_edge_source_id: -1,
-      new_edge_target_id: -1
+      new_edge_target_id: -1,
     }
   },
   props:{
+    clicked: Boolean,
     clicked_ele_id: Number,
     clicked_ele_type: String,
     clicked_ele_attribute: Object
@@ -116,5 +118,13 @@ export default {
 </script>
 
 <style scoped>
-
+#edit-bar{
+  position: fixed;
+  right: 5%;
+  top: 50%;
+  transform:translate(0px,-50%);
+  height: 70%;
+  width: 300px;
+  background: rgba(104,104,104, 0.26);
+}
 </style>
