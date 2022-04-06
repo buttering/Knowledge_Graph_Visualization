@@ -65,6 +65,7 @@ export default {
       if (cypher_sentiment === null){
         axios.get(config.graph_url).then(function (response){
           // 回调函数中this指向会改变，所以先用that保存Vue对象指针that.node_name_list = response.data.msg.node_name_list
+          that.node_name_list = response.data.msg.node_name_list
           that.edge_name_list = response.data.msg.edge_name_list
           that.nodes = response.data.msg.nodes
           that.edges = response.data.msg.edges
@@ -120,13 +121,13 @@ export default {
       let formatted_node = []
       // vue组件的property不能使用for-in进行数组的变量，因为数组在vue中是由一个代理对象进行包裹的
       for (let i = 0; i < this.nodes.length; i ++){
+        let node = this.nodes[i]
         let new_node = {
-          id : String(this.nodes[i]['<id>']),
-          category: this.string_hash_to_number(this.nodes[i]['label']),  //数据线所在类目, 将label映射为数字
-          name: this.nodes[i].attribute[ this.main_attribute[this.nodes[i]['label']] ]  // 显示在节点上的属性值,选择哪个属性进行展示由this.main_attribute决定
+          id : String(node['<id>']),
+          category: this.node_name_list.indexOf(node.label),  // 节点类型所在类目的index
+          name: node.attribute[ this.main_attribute[node.label] ]  // 显示在节点上的属性值,选择哪个属性进行展示由this.main_attribute决定
         }
         formatted_node.push(new_node)
-        console.log(new_node)
       }
       console.log('formatted_node:', formatted_node)
       return formatted_node
@@ -135,8 +136,9 @@ export default {
       let formatted_edge = []
       for (let i = 0; i < this.edges.length; i ++){
         let new_edge = {
-          source: String(this.edges[i]['source']),
-          target: String(this.edges[i]['target'])
+          source: String(this.edges[i].source),
+          target: String(this.edges[i].target),
+          type: this.edges[i].type
         }
         formatted_edge.push(new_edge)
       }
@@ -168,6 +170,7 @@ export default {
     },
 
     init_charts(){
+      // let category = ['A', 'B', 'C']
       echarts.use([
         GraphChart,
         TitleComponent,
@@ -189,15 +192,11 @@ export default {
         animationEasingUpdate: 'quinticInOut',  // 动画速率曲线
         series: [
           {
+            name: 'graph',
             type: 'graph',
             layout: 'force',  // 力引导布局
             // legendHoverLink: true,  // 开启图例hover时的联动高亮
             // hoverAnimation: true,
-            // edgeLabel: {  // 关系文字样式
-            //   position: 'middle',
-            //   formatter: '{c}',
-            //   show: true
-            // },
             edgeSymbol: ['circle', 'arrow'],  // 箭头样式
             // force: {
             //   edgeLength: 120,  // 节点距离
@@ -205,40 +204,6 @@ export default {
             // },
             roam: true,  // 开启鼠标缩放和平移漫游
             draggable: true,  // 节点可拖拽
-            // itemStyle: {
-            //   itemStyle: {
-            //     normal: {
-            //       color: '#00FAE1',
-            //       cursor: 'pointer',
-            //       //color:Math.floor(Math.random()*16777215).toString(16),
-            //       // color: ['#fc853e','#28cad8','#9564bf','#bd407e','#28cad8','#fc853e','#e5a214'],
-            //       label: {
-            //         //formatter: "{c}",为什么这个写上就不打开了？
-            //         show: true,
-            //         position: [-10, -15],
-            //         textStyle: { //标签的字体样式
-            //           color: '#fff', //字体颜色
-            //           fontStyle: 'normal',//文字字体的风格 'normal'标准 'italic'斜体 'oblique' 倾斜
-            //           fontWeight: 'bolder',//'normal'标准'bold'粗的'bolder'更粗的'lighter'更细的或100 | 200 | 300 | 400...
-            //           fontFamily: 'sans-serif', //文字的字体系列
-            //           fontSize: 12, //字体大小
-            //         }
-            //       },
-            //       nodeStyle: {
-            //         brushType: "both",
-            //         borderColor: "rgba(255,215,0,0.4)",
-            //         borderWidth: 1,
-            //       },
-            //     },
-            //     //鼠标放上去有阴影效果
-            //     emphasis: {
-            //       shadowColor: '#00FAE1',
-            //       shadowOffsetX: 0,
-            //       shadowOffsetY: 0,
-            //       shadowBlur: 40,
-            //     },
-            //   }
-            // },
             lineStyle:{  // 边的样式
               width: 2,
               curveness: 0.1
@@ -247,7 +212,7 @@ export default {
               color: '#FFFFFF',
               position: 'inside',
               show: true,
-              fontSize: 18,
+              fontSize: 12,
               fontStyle: 'normal',
               fontWeight: 'bold',
               fontFamily: 'serif',
@@ -267,9 +232,11 @@ export default {
               },
               edgeLabel: {
                 show: true,
+                formatter: (params) => { return params.data.type }
               }
             },
-            symbolSize: 14,  // 节点大小
+            categories: [],
+            symbolSize: 18,  // 节点大小
             nodes: [{}],
             edges: [{}],
             // cursor: 'cursor'  // 鼠标悬浮时在图形元素上时鼠标的样式是什么
@@ -280,6 +247,10 @@ export default {
       window.onresize = function (){
         that.myChart.resize()
       }
+    },
+
+    get_index_from_label(label){
+        return this.label.indexOf(label)
     },
 
     string_hash_to_number(string){
@@ -300,6 +271,7 @@ export default {
         let option = this.myChart.getOption()
         option.series[0].nodes = this.format_node(this.nodes)
         option.series[0].edges = this.format_edge(this.edges)
+        option.series[0].categories = Object.values(this.node_name_list)
         console.log('option:', option)
         this.myChart.setOption(option)
       }
