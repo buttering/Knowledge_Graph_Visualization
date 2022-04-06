@@ -4,6 +4,7 @@
   <SearchBar
       :node_name_list="node_name_list"
       :edge_name_list="edge_name_list"
+      @inquire="inquire_data"
   ></SearchBar>
   <edit-bar
       :clicked="clicked"
@@ -59,7 +60,7 @@ export default {
   },
   methods:{
     // 所有查询都通过这个方法进行
-    inquire_data(cypher_sentiment = null){
+    inquire_data(cypher_sentiment = null, return_type = null){
       const that = this;
       // 查询所有节点和关系，直接访问url即可
       if (cypher_sentiment === null){
@@ -89,13 +90,11 @@ export default {
         });
       // 进行Cypher查询
       }else {
-        let cypher_sentient = "MATCH (n)-[r]-(m) RETURN n, r, m"
-        let return_type = ["N", "R", "N"]
         axios({
           method: 'post',
           url: config.graph_url,
           data:{
-            "Cypher-Sentiment": cypher_sentient,
+            "Cypher-Sentiment": cypher_sentiment,
             "Return-Type": return_type
           }
         }).then(function (response){
@@ -249,10 +248,6 @@ export default {
       }
     },
 
-    get_index_from_label(label){
-        return this.label.indexOf(label)
-    },
-
     string_hash_to_number(string){
       let number = ''
       for (let char of string){
@@ -261,6 +256,7 @@ export default {
       return Number(number)
     }
   },
+
   watch: {
     // 该回调会在任何被侦听的对象的 property 改变时被调用，不论其被嵌套多深
     nodes: {

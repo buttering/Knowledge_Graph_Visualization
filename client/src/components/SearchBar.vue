@@ -1,7 +1,7 @@
 <template>
   <div id="search-menu">
-    <input placeholder="请输入...">
-    <button class='button' id="search" @click="search">search</button>
+    <input @click=search placeholder="请输入...">
+    <button class='button' id="search" @click="search">条件搜索</button>
   </div>
 </template>
 
@@ -21,6 +21,11 @@ export default {
   methods:{
     search(){
       //TODO：构建搜索语句
+
+      let cypher_sentiment = "MATCH (n)-[r]-(m) RETURN n, r, m"
+      let return_type = ["N", "R", "N"]
+      this.$emit('inquire', cypher_sentiment, return_type)
+      
     }
   }
 }
@@ -40,7 +45,7 @@ export default {
 }
 #search-menu input{
   float: left;
-  flex: 1;
+  flex: 10;
   height: 100%;
   outline: none;
   border: 1px solid white;
@@ -50,7 +55,7 @@ export default {
 }
 #search-menu button{
   float: right;
-  flex: 0;
+  flex: 1;
   height: 100%;
   background-color: rgb(224, 224, 224);
   color: black;

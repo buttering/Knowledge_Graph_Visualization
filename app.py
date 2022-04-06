@@ -200,12 +200,24 @@ def exec_cypher(cypher_sentiment: str, return_type: list) -> dict:
                 node_list.append(record[i])
             if type == "R":
                 edge_list.append(record[i])
-
-        node_list = list(set(node_list))
+    edge_list = list(set(edge_list))
+    node_list = list(set(node_list))
     # 格式化节点和对象，以字典的列表存储
     nodes = list(map(serialize_node, node_list))
     edges = list(map(serialize_edge, edge_list))
-    return {"nodes": nodes, "edges": edges}
+    node_id = []
+    edge_id = []
+    nodes_single = []
+    edges_single = []
+    for node in nodes:
+        if node['<id>'] not in node_id:
+            node_id.append(node['<id>'])
+            nodes_single.append(node)
+    for edge in edges:
+        if edge['<id>'] not in edge_id:
+            edge_id.append(edge['<id>'])
+            edges_single.append(edge)
+    return {"nodes": nodes_single, "edges": edges_single}
 
 
 def serialize_node(node):
