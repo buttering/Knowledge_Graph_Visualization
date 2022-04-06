@@ -39,7 +39,6 @@ export default {
   transform:translate(-50%,0px);
   height: 50px;
   width: 90%;
-  background: rgba(104,104,104, 0.26);
   display: flex;
   flex-direction: row;
 }
@@ -48,21 +47,26 @@ export default {
   flex: 10;
   height: 100%;
   outline: none;
-  border: 1px solid white;
+  /*border: 1px solid white;*/
   box-sizing: border-box;
   padding-left: 10px;
+  background-color: rgba(243, 248, 251, 0.6);
+  border-style: none;
 
 }
 #search-menu button{
   float: right;
   flex: 1;
   height: 100%;
-  background-color: rgb(224, 224, 224);
+  background-color: #B9E8F8;
   color: black;
   border-style: none;
   outline: none;
   transition-duration: 0.2s;
-  cursor: pointer
+  cursor: pointer;
+  font-family: Source Han Sans CN,serif;
+  font-size: 20px;
+  min-width: 100px;
 }
 #search-menu button:hover{
   background-color: rgb(120, 120, 120);

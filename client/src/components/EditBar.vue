@@ -1,16 +1,45 @@
 <template>
   <div id="edit-bar" v-if="clicked">
-    <button @click="add_node">add_node</button>
+    <div id="type_id">
+      <span id="clicked_ele_type">{{ clicked_ele_type }}</span>
+      <span id="clicked_ele_id">{{ '#' + clicked_ele_id }}</span>
+    </div>
+
+    <div class="clear"></div>
+
+    <div class="line_01"></div>
+
+    <div id="labels">
+      <div>{{clicked_ele_label}}</div>
+    </div>
+
+    <div class="clear"></div>
+
+    <div id="add_delete">
+      <button id="add_node" @click="add_node">添加{{clicked_ele_type}}</button>
+      <button id="delete_node" @click="delete_edge">删除此{{clicked_ele_type}}</button><div/>
+    </div>
+
+    <div id="Attribute">
+      <AttributeItem
+          v-for="(value, key) in clicked_ele_attribute"
+          :key="key"
+          :attr_key="key"
+          :attr_value="value"
+      ></AttributeItem>
+
+    </div>
     <button @click="edit_node_attribute">edit_node_attribute</button>
     <button @click="delete_node">delete_node</button><div/>
     <button @click="add_edge">add_edge</button>
     <button @click="edit_edge_attribute">edit_edge_attribute</button>
-    <button @click="delete_edge">delete_edge</button><div/>
+
     <div>clicked_eld_id: {{clicked_ele_id}}</div>
   </div>
 </template>
 
 <script>
+import AttributeItem from "@/components/AttributeItem";
 import config from "../../config";
 import axios from "axios";
 
@@ -28,6 +57,7 @@ export default {
     clicked: Boolean,
     clicked_ele_id: Number,
     clicked_ele_type: String,
+    clicked_ele_label: String,
     clicked_ele_attribute: Object
   },
   methods:{
@@ -113,11 +143,17 @@ export default {
       let type = 'delete'
       this.send_request(url, data, type)
     }
+  },
+  components:{
+    AttributeItem
   }
 }
 </script>
 
 <style scoped>
+div{
+  font-family: Source Han Sans CN,serif;
+}
 #edit-bar{
   position: fixed;
   right: 5%;
@@ -125,6 +161,60 @@ export default {
   transform:translate(0px,-50%);
   height: 70%;
   width: 300px;
-  background: rgba(104,104,104, 0.26);
+  background: rgba(243, 248, 251, 0.6);
+}
+#clicked_ele_type{
+  font-size: 25px;
+  float: left;
+  margin-left: 5%;
+  margin-top: 10px;
+  color: #F3F8FB;
+
+}
+#clicked_ele_id{
+  font-size: 20px;
+  float: right;
+  margin-right: 5%;
+  margin-top: 20px;
+  color: #B9E8F8
+}
+#labels{
+  margin-left: 5%;
+  margin-right: 5%;
+  width: 100%;
+
+}
+#labels div{
+  float: left;
+  color: black;
+  background: orangered;
+  height: 20px;
+  width: 70px;
+  border-radius: 10px;
+}
+#add_delete{
+  width: 90%;
+  margin: 5%;
+  display: flex;
+}
+#add_delete button{
+  flex: 1;
+  border: 0;
+  padding: 0;
+  height: 40px;
+}
+#add_node{
+  background: green;
+}
+#delete_node{
+  background: red;
+}
+.line_01{
+  margin: 5%;
+  border: 1px solid black;
+  height: 0;
+}
+.clear{
+  clear: both;
 }
 </style>

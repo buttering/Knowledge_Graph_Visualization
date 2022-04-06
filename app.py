@@ -202,9 +202,10 @@ def exec_cypher(cypher_sentiment: str, return_type: list) -> dict:
                 edge_list.append(record[i])
     edge_list = list(set(edge_list))
     node_list = list(set(node_list))
-    # 格式化节点和对象，以字典的列表存储
+    # 格式化节点和关系，以字典的列表存储
     nodes = list(map(serialize_node, node_list))
     edges = list(map(serialize_edge, edge_list))
+    # 使节点和关系不重复
     node_id = []
     edge_id = []
     nodes_single = []

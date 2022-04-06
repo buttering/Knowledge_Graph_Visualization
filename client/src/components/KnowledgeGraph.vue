@@ -7,9 +7,10 @@
       @inquire="inquire_data"
   ></SearchBar>
   <edit-bar
-      :clicked="clicked"
+      :clicked= true
       :clicked_ele_id="click_ele_id"
       :clicked_ele_type="click_ele_type"
+      :clicked_ele_label="clicked_ele_label"
       :clicked_ele_attribute="click_ele_attribute"
   ></edit-bar>
 </template>
@@ -38,9 +39,10 @@ export default {
   name: "KnowledgeGraph",
   data(){
     return {
-      click_ele_id: -1,
-      click_ele_type: "",
-      click_ele_attribute: {},
+      click_ele_id: 12,
+      click_ele_type: "节点",  // '节点' or '关系'
+      clicked_ele_label: 'Person',
+      click_ele_attribute: {name: 'Wang Jiawei', age: 18, height: 180},
       clicked: true,
 
       // 以下两个变量需要传递给SearchBar
