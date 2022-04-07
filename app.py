@@ -76,7 +76,7 @@ class NodeRoute(Resource):
     def put(self):
         request_data = request.get_json()
         node_attributes = request_data.get('Node-Attribute')
-        node_id = request_data.get('Node-Id')
+        node_id = int(request_data.get('Node-Id'))
 
         node_matcher = NodeMatcher(graph)
         try:
@@ -94,7 +94,7 @@ class NodeRoute(Resource):
 
     def delete(self):
         request_data = request.get_json()
-        node_id = request_data.get('Node-Id')
+        node_id = int(request_data.get('Node-Id'))
 
         node_matcher = NodeMatcher(graph)
         try:
@@ -111,8 +111,8 @@ class RelationshipRoute(Resource):
         request_data = request.get_json()
         relationship_type = request_data.get('Edge-Type')
         relationship_attribute = request_data.get('Edge-Attribute')
-        relationship_source_node_ID = request_data.get('Source-Node')
-        relationship_target_node_ID = request_data.get('Target-Node')
+        relationship_source_node_ID = int(request_data.get('Source-Node'))
+        relationship_target_node_ID = int(request_data.get('Target-Node'))
 
         node_matcher = NodeMatcher(graph)
         try:
@@ -130,7 +130,7 @@ class RelationshipRoute(Resource):
 
     def put(self):
         request_data = request.get_json()
-        relationship_ID = request_data.get('Edge-Id')
+        relationship_ID = int(request_data.get('Edge-Id'))
         relationship_attribute = request_data.get('Edge-Attribute')
 
         relationship_matcher = RelationshipMatcher(graph)
@@ -149,7 +149,7 @@ class RelationshipRoute(Resource):
 
     def delete(self):
         request_data = request.get_json()
-        relationship_ID = request_data.get('Edge-Id')
+        relationship_ID = int(request_data.get('Edge-Id'))
 
         relationship_matcher = RelationshipMatcher(graph)
         try:
@@ -231,12 +231,19 @@ def serialize_node(node):
 
 
 def serialize_edge(edge):
+    # 关系属性值使用列表存储的，只取第一个值
+    attribute = {}
+    for key, value in dict(edge).items():
+        if isinstance(value, list):
+            attribute[key] = value[0]
+        else:
+            attribute[key] = value
     data = {
         "<id>": edge.identity,
         "source": edge.start_node.identity,
         "target": edge.end_node.identity,
         "type": type(edge).__name__,
-        "attribute": dict(edge)
+        "attribute": attribute
     }
     return data
 

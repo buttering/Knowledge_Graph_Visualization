@@ -4,15 +4,18 @@
   <SearchBar
       :node_name_list="node_name_list"
       :edge_name_list="edge_name_list"
-      @inquire="inquire_data"
-  ></SearchBar>
+      @inquire="send_inquire_request"
+  />
   <edit-bar
+      v-if="clicked"
       :clicked= true
-      :clicked_ele_id="click_ele_id"
-      :clicked_ele_type="click_ele_type"
+      :clicked_ele_id="clicked_ele_id"
+      :clicked_ele_type="clicked_ele_type"
       :clicked_ele_label="clicked_ele_label"
-      :clicked_ele_attribute="click_ele_attribute"
-  ></edit-bar>
+      :clicked_ele_attribute="clicked_ele_attribute"
+      @send_edit_request="send_edit_request"
+      @set_main_attribute="set_main_attribute"
+  />
 </template>
 
 <script>
@@ -39,11 +42,11 @@ export default {
   name: "KnowledgeGraph",
   data(){
     return {
-      click_ele_id: 12,
-      click_ele_type: "节点",  // '节点' or '关系'
-      clicked_ele_label: 'Person',
-      click_ele_attribute: {name: 'Wang Jiawei', age: 18, height: 180},
-      clicked: true,
+      clicked_ele_id: NaN,
+      clicked_ele_type: "选择元素",  // '节点' or '关系'
+      clicked_ele_label: '',
+      clicked_ele_attribute: null,
+      clicked: false,
 
       // 以下两个变量需要传递给SearchBar
       node_name_list: [],
@@ -62,7 +65,7 @@ export default {
   },
   methods:{
     // 所有查询都通过这个方法进行
-    inquire_data(cypher_sentiment = null, return_type = null){
+    send_inquire_request(cypher_sentiment = null, return_type = null){
       const that = this;
       // 查询所有节点和关系，直接访问url即可
       if (cypher_sentiment === null){
@@ -117,6 +120,39 @@ export default {
         });
       }
     },
+    // 进行编辑请求
+    send_edit_request(data, method, type){
+      let url
+      let that = this
+      if (type === '节点'){
+        url = config.graph_node_url
+      }else if(type === '关系'){
+        url = config.graph_edge_url
+      }
+      console.log('method:', method, ';', type, '\nsend message:', data)
+      axios({
+        url: url,
+        method: method,
+        data: data
+      }).then(function (response){
+        if (response.status === 200 && response.data.code === 200){
+          // 全局刷新
+          console.log('success to ', type)
+          that.send_inquire_request()
+        }
+      }).catch(error=>{
+          if (error.response) {
+            console.log(error.response.data);
+            console.log(error.response.status);
+            console.log(error.response.headers);
+          } else if (error.request) {
+            console.log(error.request);
+          } else {
+              console.log('Error', error.message);
+          }
+          console.log(error.config);
+      })
+    },
 
     format_node(){
       let formatted_node = []
@@ -126,26 +162,32 @@ export default {
         let new_node = {
           id : String(node['<id>']),
           category: this.node_name_list.indexOf(node.label),  // 节点类型所在类目的index
-          name: node.attribute[ this.main_attribute[node.label] ]  // 显示在节点上的属性值,选择哪个属性进行展示由this.main_attribute决定
+          name: node.attribute[ this.main_attribute[node.label] ],  // 显示在节点上的属性值,选择哪个属性进行展示由this.main_attribute决定
+          attribute: node.attribute
         }
         formatted_node.push(new_node)
       }
       console.log('formatted_node:', formatted_node)
       return formatted_node
     },
+
     format_edge(){
       let formatted_edge = []
       for (let i = 0; i < this.edges.length; i ++){
+        let edge = this.edges[i]
         let new_edge = {
-          source: String(this.edges[i].source),
-          target: String(this.edges[i].target),
-          type: this.edges[i].type
+          source: String(edge.source),
+          target: String(edge.target),
+          type: edge.type,
+          id: edge['<id>'],
+          attribute: edge.attribute
         }
         formatted_edge.push(new_edge)
       }
       console.log('formatted_edge:', formatted_edge)
       return formatted_edge
     },
+
     // 对节点显示哪个属性进行设置
     set_main_attribute(label=null, attribute_name=null){
       if (label === null) {  // 自动设置
@@ -165,10 +207,32 @@ export default {
             this.main_attribute[node_label] = node_first_attribute
           }
         }
-      }else{
+      }else{  // 根据用户选择进行设置
         this.main_attribute[label] = attribute_name
+        console.log('Set the ', label, '\'s main attribute to ', attribute_name)
+        let option = this.myChart.getOption()
+        option.series[0].nodes = this.format_node(this.nodes)
+        this.myChart.setOption(option)
       }
     },
+
+    // 选择节点或关系的事件处理函数
+    select_element_event(param){
+      if (param.dataType === 'node' || param.dataType === 'edge') {
+        if (param.dataType === 'node') {
+          this.clicked_ele_type = '节点'
+          this.clicked_ele_label = this.node_name_list[param.data.category]
+        } else {
+          this.clicked_ele_type = '关系'
+          this.clicked_ele_label = param.data.type
+        }
+        this.clicked_ele_id = param.data.id
+        this.clicked = true
+        this.clicked_ele_attribute = param.data.attribute
+      }
+    },
+
+    // TODO 节点或关系失去焦点事件处理函数
 
     init_charts(){
       // let category = ['A', 'B', 'C']
@@ -189,6 +253,8 @@ export default {
         this.myChart = echarts.init(document.getElementById('chart'), 'dark')
       }
       let option = {
+        animationDuration: 1500,
+        animationEasing: 'quinticInOut',
         animationDurationUpdate: 1500,  // 启动动画时长
         animationEasingUpdate: 'quinticInOut',  // 动画速率曲线
         series: [
@@ -206,8 +272,19 @@ export default {
             roam: true,  // 开启鼠标缩放和平移漫游
             draggable: true,  // 节点可拖拽
             lineStyle:{  // 边的样式
-              width: 2,
+              width: 4,
               curveness: 0.1
+            },
+            selectedMode: true,  // 是否可选中
+            select: {
+              itemStyle: {
+                color: 'rgba(252, 75, 75, 1)'
+              },
+              lineStyle: {
+                color: 'rgba(255, 255, 255, 1)',
+                opacity: 1,
+                width: 8
+              }
             },
             label:{  // 展示图形标签
               color: '#FFFFFF',
@@ -228,8 +305,7 @@ export default {
                 position: 'top'
               },
               lineStyle: {
-                width: 10,
-
+                width: 12,
               },
               edgeLabel: {
                 show: true,
@@ -245,14 +321,15 @@ export default {
         ]
       };
       this.myChart.setOption(option)
+      this.myChart.on('click', this.select_element_event)
       window.onresize = function (){
         that.myChart.resize()
       }
     },
 
-    string_hash_to_number(string){
+    string_hash_to_number(string) {
       let number = ''
-      for (let char of string){
+      for (let char of string) {
         number += String(char.charCodeAt())
       }
       return Number(number)
@@ -264,7 +341,7 @@ export default {
     nodes: {
       // 更新echarts数据
       handler(){
-        // TODO:更新图标
+        // TODO:更新图标 ?? 更新什么图标
         this.set_main_attribute()
         let option = this.myChart.getOption()
         option.series[0].nodes = this.format_node(this.nodes)
@@ -277,7 +354,7 @@ export default {
 
   },
   mounted() {
-    this.inquire_data()
+    this.send_inquire_request()
     this.init_charts()
     // TODO:查询所有元素
 

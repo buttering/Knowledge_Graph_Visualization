@@ -1,5 +1,5 @@
 <template>
-  <KnowledgeGraph></KnowledgeGraph>
+  <KnowledgeGraph/>
 </template>
 
 <script>
