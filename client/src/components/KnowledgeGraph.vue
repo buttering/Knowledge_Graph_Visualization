@@ -76,6 +76,7 @@ export default {
           that.nodes = response.data.msg.nodes
           that.edges = response.data.msg.edges
           console.log('Get data:', response.data.msg)
+          that.myChart.hideLoading()  // 关闭加载动画
         }).catch(error=>{
           if (error.response) {
             // 请求已发出，且服务器的响应状态码超出了 2xx 范围
@@ -193,7 +194,7 @@ export default {
       if (label === null) {  // 自动设置
         for (let i = 0; i < this.nodes.length; i++) {
           let node_label = this.nodes[i].label
-          if ( Object.keys(this.main_attribute).indexOf(node_label) < 0 ) {
+          if ( Object.keys(this.main_attribute).indexOf(node_label) < 0 ) {  // 只更新没有设置的节点类型
             //  获取第一个属性名
             let node_first_attribute = ""
             let keys = Object.keys(this.nodes[i].attribute)
@@ -219,6 +220,10 @@ export default {
     // 选择节点或关系的事件处理函数
     select_element_event(param){
       if (param.dataType === 'node' || param.dataType === 'edge') {
+        if (this.clicked === true && this.clicked_ele_id === param.data.id) {  // 取消对元素的选择
+          this.clicked = false
+          return
+        }
         if (param.dataType === 'node') {
           this.clicked_ele_type = '节点'
           this.clicked_ele_label = this.node_name_list[param.data.category]
@@ -252,6 +257,7 @@ export default {
       if (!this.myChart){
         this.myChart = echarts.init(document.getElementById('chart'), 'dark')
       }
+      this.myChart.showLoading()
       let option = {
         animationDuration: 1500,
         animationEasing: 'quinticInOut',
@@ -354,8 +360,8 @@ export default {
 
   },
   mounted() {
-    this.send_inquire_request()
     this.init_charts()
+    this.send_inquire_request()
     // TODO:查询所有元素
 
   },
