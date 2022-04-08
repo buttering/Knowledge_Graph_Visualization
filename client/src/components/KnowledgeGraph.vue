@@ -79,11 +79,12 @@ export default {
       attribute_bar_loading: false,  // 正在修改属性
       global_loading: false,
       // 界面所处模式，状态如下
+      // “init":初试状态
       // "view":观察模式;
       // "edit":编辑模式;
       // "add":添加元素模式;
       // "select“:选择模式
-      operation_mode: "view"
+      operation_mode: "init"
     }
   },
   props:{
@@ -422,7 +423,7 @@ export default {
         }
 
         // 选择元素进入编辑模式
-        if (this.operation_mode === 'view'){
+        if (this.operation_mode === 'view' || this.operation_mode === 'edit'){
           if (param.dataType === 'node') {
             this.clicked_ele_type = '节点'
             this.clicked_ele_label = this.node_name_list[param.data.category]
@@ -453,7 +454,9 @@ export default {
       }
       return Number(number)
     },
-     change_mode(mode){
+
+    // 切换模式相关动作
+    change_mode(mode){
       this.operation_mode = mode
     }
   },

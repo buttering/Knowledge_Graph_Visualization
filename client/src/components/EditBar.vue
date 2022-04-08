@@ -16,7 +16,7 @@
     <div class="clear"></div>
 
     <div id="add_delete">
-      <button id="add_node" @click="enter_edit_mode">添加节点/关系</button>
+      <button id="add_node" @click="enter_add_mode">添加节点/关系</button>
       <button id="delete_node" @click="delete_ele">删除此{{clicked_ele_type}}</button><div/>
     </div>
 
@@ -84,7 +84,7 @@ export default {
     //   let type = 'post'
     //   this.send_request(url, data, type)
     // },
-    enter_edit_mode(){
+    enter_add_mode(){
       this.$emit("change_mode", 'add')
     },
 
