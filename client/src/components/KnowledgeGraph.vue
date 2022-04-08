@@ -1,16 +1,18 @@
 <template>
-  <div id="chart" style="width: 100%;height: 100%" v-loading="global_loading"  element-loading-text="查询中"></div>
+  <div>{{operation_mode}}</div>
+  <div
+      id="chart"
+      style="width: 100%;height: 100%"
+      v-loading="global_loading"  element-loading-text="查询中"></div>
 
   <SearchBar
-      v-show="!global_loading"
+      v-show="show_search_bar"
       :node_name_list="node_name_list"
       :edge_name_list="edge_name_list"
       @inquire="send_inquire_request"
   />
   <edit-bar
-      v-show="!global_loading"
-      v-if="clicked"
-      :clicked= true
+      v-show="show_edit_bar"
       :clicked_ele_id="clicked_ele_id"
       :clicked_ele_type="clicked_ele_type"
       :clicked_ele_label="clicked_ele_label"
@@ -19,12 +21,19 @@
       @delete_ele="delete_ele"
       @set_main_attribute="set_main_attribute"
       @edit_ele_attribute="edit_ele_attribute"
+      @change_mode="change_mode"
+  />
+  <add-bar
+      v-show="show_add_bar"
+      :select_node_id="select_node_id"
+      @change_mode="change_mode"
   />
 </template>
 
 <script>
 import SearchBar from "@/components/SearchBar";
 import EditBar from "@/components/EditBar";
+import AddBar from "@/components/AddBar";
 
 import * as echarts from 'echarts/core'
 import {GraphChart} from 'echarts/charts'
@@ -46,29 +55,50 @@ export default {
   name: "KnowledgeGraph",
   data(){
     return {
+      // 以下变量传递给EditBar
       clicked_ele_id: NaN,
       clicked_ele_type: "选择元素",  // '节点' or '关系'
       clicked_ele_label: '',
       clicked_ele_attribute: null,
-      clicked: false,
+      // clicked: false,
 
-      // 以下两个变量需要传递给SearchBar
+      // 以下变量需要传递给SearchBar和AddBar
       node_name_list: [],
       edge_name_list: [],
+
+      // 以下变量传递给AddBar
+      select_node_id: -1,
 
       nodes: [],
       edges: [],
 
       cypher_sentiment: "",
 
-      main_attribute:{},  // 展示在节点上的属性,每种标签的节点可定制一个属性名
+      main_attribute: {},  // 展示在节点上的属性,每种标签的节点可定制一个属性名
 
       attribute_bar_loading: false,  // 正在修改属性
-      global_loading: false
+      global_loading: false,
+      // 界面所处模式，状态如下
+      // "view":观察模式;
+      // "edit":编辑模式;
+      // "add":添加元素模式;
+      // "select“:选择模式
+      operation_mode: "view"
     }
   },
   props:{
 
+  },
+  computed: {
+    show_search_bar(){
+      return this.operation_mode === 'view' || this.operation_mode === 'edit'
+    },
+    show_edit_bar(){
+      return this.operation_mode === 'edit'
+    },
+    show_add_bar(){
+      return this.operation_mode === 'add'
+    },
   },
   methods:{
     /////////////////  网络请求方法  ///////////////////
@@ -86,7 +116,7 @@ export default {
           that.edges = response.data.msg.edges
           console.log('Get data:', response.data.msg)
           that.global_loading = false  // 关闭加载动画
-          that.clicked = false // 关闭编辑面板
+          that.operation_mode = 'view' // 关闭编辑面板
         }).catch(error=>{
           that.global_loading = false
           if (error.response) {
@@ -120,7 +150,7 @@ export default {
           that.edges = response.data.msg.edges
           console.log('Get data:', response.data.msg)
           that.global_loading = false  // 关闭加载动画
-          that.clicked = false // 关闭编辑面板
+          that.operation_mode = 'view' // 关闭编辑面板
         }).catch(error=>{
           that.$message.error('查询失败')
           if (error.response) {
@@ -385,20 +415,32 @@ export default {
     select_element_event(param){
       // TODO 节点或关系失去焦点事件处理函数 [已完成]
       if (param.dataType === 'node' || param.dataType === 'edge') {
-        if (this.clicked === true && this.clicked_ele_id === param.data.id) {  // 取消对元素的选择
-          this.clicked = false
+        // 再次点击退出编辑模式
+        if (this.operation_mode === 'edit' && this.clicked_ele_id === param.data.id) {  // 取消对元素的选择
+          this.operation_mode = 'view'
           return
         }
-        if (param.dataType === 'node') {
-          this.clicked_ele_type = '节点'
-          this.clicked_ele_label = this.node_name_list[param.data.category]
-        } else {
-          this.clicked_ele_type = '关系'
-          this.clicked_ele_label = param.data.type
+
+        // 选择元素进入编辑模式
+        if (this.operation_mode === 'view'){
+          if (param.dataType === 'node') {
+            this.clicked_ele_type = '节点'
+            this.clicked_ele_label = this.node_name_list[param.data.category]
+          } else {
+            this.clicked_ele_type = '关系'
+            this.clicked_ele_label = param.data.type
+          }
+          this.clicked_ele_id = param.data.id
+          this.operation_mode = 'edit'
+          this.clicked_ele_attribute = param.data.attribute
+          return
         }
-        this.clicked_ele_id = param.data.id
-        this.clicked = true
-        this.clicked_ele_attribute = param.data.attribute
+
+        // 处于选择节点模式
+        if (this.operation_mode === 'select' && param.dataType === 'node'){
+          this.select_node_id = param.data.id
+          this.operation_mode = 'add'
+        }
       }
     },
 
@@ -410,8 +452,13 @@ export default {
         number += String(char.charCodeAt())
       }
       return Number(number)
+    },
+     change_mode(mode){
+      this.operation_mode = mode
     }
   },
+
+
 
   watch: {
     // 该回调会在任何被侦听的对象的 property 改变时被调用，不论其被嵌套多深
@@ -439,6 +486,7 @@ export default {
   components: {
     SearchBar,
     EditBar,
+    AddBar
   }
 }
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <div id="edit-bar" v-if="clicked" v-loading="loading"  element-loading-text="修改中">
+  <div id="edit-bar" v-loading="loading"  element-loading-text="修改中">
     <div id="type_id">
       <span id="clicked_ele_type">{{ clicked_ele_type }}</span>
       <span id="clicked_ele_id">{{ '#' + clicked_ele_id }}</span>
@@ -16,14 +16,7 @@
     <div class="clear"></div>
 
     <div id="add_delete">
-<!--      <el-row>-->
-<!--        <el-button type="primary" @click="add_node">添加节点</el-button>-->
-<!--        <el-button type="success" @click="add_edge">添加关系</el-button>-->
-<!--        <el-button type="danger" @click="delete_ele">删除此{{clicked_ele_type}}</el-button>-->
-<!--      </el-row>-->
-
-      <button id="add_node" @click="add_node">添加节点</button>
-      <button id="add_edge" @click="add_edge">添加关系</button>
+      <button id="add_node" @click="enter_edit_mode">添加节点/关系</button>
       <button id="delete_node" @click="delete_ele">删除此{{clicked_ele_type}}</button><div/>
     </div>
 
@@ -56,7 +49,7 @@ export default {
     }
   },
   props:{
-    clicked: Boolean,
+    // clicked: Boolean,
     clicked_ele_id: String,
     clicked_ele_type: String,  //'节点' or '关系'
     clicked_ele_label: String,
@@ -91,13 +84,15 @@ export default {
     //   let type = 'post'
     //   this.send_request(url, data, type)
     // },
-
+    enter_edit_mode(){
+      this.$emit("change_mode", 'add')
+    },
 
     delete_ele(){
       this.$emit('delete_ele')
     },
 
-    // 对元素属性的添加、修改和删除都通过这个函数
+    // 对元素属性的添加、修改和删除都通add过这个函数
     edit_ele_attribute(key, value=null){
       let attribute = this.clicked_ele_attribute
       if (value === null){  // 只指明属性关键字，删除操作
@@ -198,7 +193,7 @@ div{
   border: 0;
 }
 #add_node{
-  background: #3CA4EC;
+  background: #04E474;
 }
 #add_edge{
   background: #04E474;
