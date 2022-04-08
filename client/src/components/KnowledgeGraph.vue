@@ -1,20 +1,24 @@
 <template>
-  <div id="chart" style="width: 100%;height: 100%"></div>
+  <div id="chart" style="width: 100%;height: 100%" v-loading="global_loading"  element-loading-text="查询中"></div>
 
   <SearchBar
+      v-show="!global_loading"
       :node_name_list="node_name_list"
       :edge_name_list="edge_name_list"
       @inquire="send_inquire_request"
   />
   <edit-bar
+      v-show="!global_loading"
       v-if="clicked"
       :clicked= true
       :clicked_ele_id="clicked_ele_id"
       :clicked_ele_type="clicked_ele_type"
       :clicked_ele_label="clicked_ele_label"
       :clicked_ele_attribute="clicked_ele_attribute"
-      @send_edit_request="send_edit_request"
+      :loading="attribute_bar_loading"
+      @delete_ele="delete_ele"
       @set_main_attribute="set_main_attribute"
+      @edit_ele_attribute="edit_ele_attribute"
   />
 </template>
 
@@ -57,16 +61,21 @@ export default {
 
       cypher_sentiment: "",
 
-      main_attribute:{}  // 展示在节点上的属性,每种标签的节点可定制一个属性名
+      main_attribute:{},  // 展示在节点上的属性,每种标签的节点可定制一个属性名
+
+      attribute_bar_loading: false,  // 正在修改属性
+      global_loading: false
     }
   },
   props:{
 
   },
   methods:{
+    /////////////////  网络请求方法  ///////////////////
     // 所有查询都通过这个方法进行
     send_inquire_request(cypher_sentiment = null, return_type = null){
       const that = this;
+      this.global_loading = true
       // 查询所有节点和关系，直接访问url即可
       if (cypher_sentiment === null){
         axios.get(config.graph_url).then(function (response){
@@ -76,8 +85,10 @@ export default {
           that.nodes = response.data.msg.nodes
           that.edges = response.data.msg.edges
           console.log('Get data:', response.data.msg)
-          that.myChart.hideLoading()  // 关闭加载动画
+          that.global_loading = false  // 关闭加载动画
+          that.clicked = false // 关闭编辑面板
         }).catch(error=>{
+          that.global_loading = false
           if (error.response) {
             // 请求已发出，且服务器的响应状态码超出了 2xx 范围
             console.log(error.response.data);
@@ -93,6 +104,7 @@ export default {
               console.log('Error', error.message);
           }
           console.log(error.config);
+
         });
       // 进行Cypher查询
       }else {
@@ -107,7 +119,10 @@ export default {
           that.nodes = response.data.msg.nodes
           that.edges = response.data.msg.edges
           console.log('Get data:', response.data.msg)
+          that.global_loading = false  // 关闭加载动画
+          that.clicked = false // 关闭编辑面板
         }).catch(error=>{
+          that.$message.error('查询失败')
           if (error.response) {
             console.log(error.response.data);
             console.log(error.response.status);
@@ -122,15 +137,15 @@ export default {
       }
     },
     // 进行编辑请求
-    send_edit_request(data, method, type){
+    send_edit_request(data, method, type, call_back){
       let url
       let that = this
+      this.attribute_bar_loading = true  // 进入加载动画
       if (type === '节点'){
         url = config.graph_node_url
       }else if(type === '关系'){
         url = config.graph_edge_url
       }
-      console.log('method:', method, ';', type, '\nsend message:', data)
       axios({
         url: url,
         method: method,
@@ -138,23 +153,79 @@ export default {
       }).then(function (response){
         if (response.status === 200 && response.data.code === 200){
           // 全局刷新
-          console.log('success to ', type)
-          that.send_inquire_request()
+          console.log('Success to',method, type, ':', data)
+          call_back()  // 若操作成功，运行自定义回调函数
+          that.attribute_bar_loading = false
         }
       }).catch(error=>{
-          if (error.response) {
-            console.log(error.response.data);
-            console.log(error.response.status);
-            console.log(error.response.headers);
-          } else if (error.request) {
-            console.log(error.request);
-          } else {
-              console.log('Error', error.message);
-          }
-          console.log(error.config);
+        that.$message.error('修改失败！')
+        that.attribute_bar_loading = false
+        if (error.response) {
+          console.log(error.response.data);
+          console.log(error.response.status);
+          console.log(error.response.headers);
+        } else if (error.request) {
+          console.log(error.request);
+        } else {
+            console.log('Error', error.message);
+        }
+        console.log(error.config);
       })
     },
 
+    ////////////////  界面事件处理方法  //////////////////////
+    // 删除元素
+    delete_ele(){
+      let data
+      if (this.clicked_ele_type === '节点') {
+        data = {
+          "Node-Id": this.clicked_ele_id
+        }
+      }else if (this.clicked_ele_type === '关系'){
+        data = {
+          "Edge-Id": this.clicked_ele_id
+        }
+      }
+      this.global_loading = true
+      this.send_edit_request(data, 'delete', this.clicked_ele_type, this.send_inquire_request)
+    },
+
+    // 编辑元素属性
+    edit_ele_attribute(attribute){
+      let that = this
+      function find_ele_by_id(element_list, ele_id){
+        for (let i = 0; i < element_list.length; i++)
+          if (element_list[i]['<id>'] == ele_id)  // ele_id 可能是字符串
+            return i
+      }
+      let option = this.myChart.getOption()
+      if (this.clicked_ele_type === '节点') {
+        // 监听函数不能监听到此处nodes的变化，原因不明
+        this.nodes[find_ele_by_id(this.nodes, this.clicked_ele_id)].attribute = attribute
+        option.series[0].nodes = this.format_node(this.nodes)
+        this.myChart.setOption(option)
+        let data = {
+          "Node-Id": this.clicked_ele_id,
+          "Node-Attribute": attribute
+        }
+        this.send_edit_request(data, 'put', this.clicked_ele_type, function (){
+          that.$message.success("属性修改成功！")
+        })
+      } else if (this.clicked_ele_type === '关系') {
+        this.edges[find_ele_by_id(this.edges, this.clicked_ele_id)].attribute = attribute
+        option.series[0].edges = this.format_edge(this.edges)
+        this.myChart.setOption(option)
+        let data = {
+          "Edge-Id": this.clicked_ele_id,
+          "Edge-Attribute": attribute
+        }
+        this.send_edit_request(data, 'put', this.clicked_ele_type, function (){
+          that.$message.success("属性修改成功！")
+        })
+      }
+
+    },
+    ///////////////  数据规格化方法  ////////////////////
     format_node(){
       let formatted_node = []
       // vue组件的property不能使用for-in进行数组的变量，因为数组在vue中是由一个代理对象进行包裹的
@@ -210,35 +281,13 @@ export default {
         }
       }else{  // 根据用户选择进行设置
         this.main_attribute[label] = attribute_name
-        console.log('Set the ', label, '\'s main attribute to ', attribute_name)
+        console.log('Set the', label, '\'s main attribute to', attribute_name)
         let option = this.myChart.getOption()
         option.series[0].nodes = this.format_node(this.nodes)
         this.myChart.setOption(option)
       }
     },
-
-    // 选择节点或关系的事件处理函数
-    select_element_event(param){
-      if (param.dataType === 'node' || param.dataType === 'edge') {
-        if (this.clicked === true && this.clicked_ele_id === param.data.id) {  // 取消对元素的选择
-          this.clicked = false
-          return
-        }
-        if (param.dataType === 'node') {
-          this.clicked_ele_type = '节点'
-          this.clicked_ele_label = this.node_name_list[param.data.category]
-        } else {
-          this.clicked_ele_type = '关系'
-          this.clicked_ele_label = param.data.type
-        }
-        this.clicked_ele_id = param.data.id
-        this.clicked = true
-        this.clicked_ele_attribute = param.data.attribute
-      }
-    },
-
-    // TODO 节点或关系失去焦点事件处理函数
-
+    ///////////////  Echarts处理方法  ///////////////////
     init_charts(){
       // let category = ['A', 'B', 'C']
       echarts.use([
@@ -257,7 +306,6 @@ export default {
       if (!this.myChart){
         this.myChart = echarts.init(document.getElementById('chart'), 'dark')
       }
-      this.myChart.showLoading()
       let option = {
         animationDuration: 1500,
         animationEasing: 'quinticInOut',
@@ -296,7 +344,7 @@ export default {
               color: '#FFFFFF',
               position: 'inside',
               show: true,
-              fontSize: 12,
+              fontSize: 14,
               fontStyle: 'normal',
               fontWeight: 'bold',
               fontFamily: 'serif',
@@ -320,7 +368,7 @@ export default {
             },
             categories: [],
             symbolSize: 18,  // 节点大小
-            nodes: [{}],
+            nodes: [],
             edges: [{}],
             // cursor: 'cursor'  // 鼠标悬浮时在图形元素上时鼠标的样式是什么
           }
@@ -333,6 +381,29 @@ export default {
       }
     },
 
+    // 选择节点或关系的事件处理函数
+    select_element_event(param){
+      // TODO 节点或关系失去焦点事件处理函数 [已完成]
+      if (param.dataType === 'node' || param.dataType === 'edge') {
+        if (this.clicked === true && this.clicked_ele_id === param.data.id) {  // 取消对元素的选择
+          this.clicked = false
+          return
+        }
+        if (param.dataType === 'node') {
+          this.clicked_ele_type = '节点'
+          this.clicked_ele_label = this.node_name_list[param.data.category]
+        } else {
+          this.clicked_ele_type = '关系'
+          this.clicked_ele_label = param.data.type
+        }
+        this.clicked_ele_id = param.data.id
+        this.clicked = true
+        this.clicked_ele_attribute = param.data.attribute
+      }
+    },
+
+
+    //////////////  工具函数  //////////////////////
     string_hash_to_number(string) {
       let number = ''
       for (let char of string) {
@@ -353,7 +424,7 @@ export default {
         option.series[0].nodes = this.format_node(this.nodes)
         option.series[0].edges = this.format_edge(this.edges)
         option.series[0].categories = Object.values(this.node_name_list)
-        console.log('option:', option)
+        console.log('set option:', option)
         this.myChart.setOption(option)
       }
     },

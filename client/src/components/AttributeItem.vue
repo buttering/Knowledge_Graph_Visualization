@@ -29,10 +29,10 @@ export default {
       this.$emit("set_main_attribute", this.attr_key)
     },
     save_attribute(){
-
+      this.$emit("edit_ele_attribute", this.attr_key, this.input_text)
     },
     delete_attribute(){
-
+      this.$emit("edit_ele_attribute", this.attr_key)
     }
   },
   mounted() {
@@ -71,7 +71,7 @@ export default {
   height: 30px;
   vertical-align: middle;
   border: 0;
-
+  cursor: pointer;
 }
 
 #main_attribute{

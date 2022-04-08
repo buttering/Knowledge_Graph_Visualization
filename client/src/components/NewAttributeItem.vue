@@ -1,12 +1,14 @@
 <template>
     <div class="attribute-item">
-    <span class="key" contenteditable="true" @click="input_key">{{new_attribute_key}}</span>
-    <span class="value" contenteditable="true" @click="input_value">{{new_attribute_value}}</span>
+    <span class="key" contenteditable="true" @input="input_key">{{new_attribute_key}}</span>
+    <span class="value" contenteditable="true" @input="input_value">{{new_attribute_value}}</span>
     <button class="button" id="add_attribute" @click="add_attribute"></button>
   </div>
 </template>
 
 <script>
+
+
 export default {
   name: "NewAttributeItem",
   data(){
@@ -23,7 +25,13 @@ export default {
       this.new_attribute_value = event.target.innerText
     },
     add_attribute(){
-
+      if (this.new_attribute_key === ''){
+        this.$message.warning("属性名不能为空！")
+        return
+      }
+      this.$emit("add_attribute", this.new_attribute_key, this.new_attribute_value)
+      this.new_attribute_key = ''
+      this.new_attribute_value = ''
     }
   }
 }
@@ -63,5 +71,6 @@ export default {
 #add_attribute{
   background: url("../assets/添加.jpg") no-repeat;
   background-size: cover;
+  cursor: pointer;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div id="edit-bar" v-if="clicked">
+  <div id="edit-bar" v-if="clicked" v-loading="loading"  element-loading-text="修改中">
     <div id="type_id">
       <span id="clicked_ele_type">{{ clicked_ele_type }}</span>
       <span id="clicked_ele_id">{{ '#' + clicked_ele_id }}</span>
@@ -16,7 +16,14 @@
     <div class="clear"></div>
 
     <div id="add_delete">
-      <button id="add_node" @click="add_ele">添加节点/关系</button>
+<!--      <el-row>-->
+<!--        <el-button type="primary" @click="add_node">添加节点</el-button>-->
+<!--        <el-button type="success" @click="add_edge">添加关系</el-button>-->
+<!--        <el-button type="danger" @click="delete_ele">删除此{{clicked_ele_type}}</el-button>-->
+<!--      </el-row>-->
+
+      <button id="add_node" @click="add_node">添加节点</button>
+      <button id="add_edge" @click="add_edge">添加关系</button>
       <button id="delete_node" @click="delete_ele">删除此{{clicked_ele_type}}</button><div/>
     </div>
 
@@ -27,8 +34,11 @@
           :attr_key="key"
           :attr_value="value"
           @set_main_attribute="set_main_attribute"
+          @edit_ele_attribute="edit_ele_attribute"
       />
-      <NewAttributeItem/>
+      <NewAttributeItem
+          @add_attribute="edit_ele_attribute"
+      />
     </div>
 
   </div>
@@ -50,20 +60,11 @@ export default {
     clicked_ele_id: String,
     clicked_ele_type: String,  //'节点' or '关系'
     clicked_ele_label: String,
-    clicked_ele_attribute: Object
+    clicked_ele_attribute: Object,
+
+    loading: Boolean  // 由父节点控制加载动画
   },
   methods:{
-    // send_request(url, data, type){
-    //   axios({
-    //     method: type,
-    //     url: url,
-    //     data: data
-    //   }).then(function (response){
-    //     if (response.status === 200 && response.data.code === 200){
-    //       alert("add success!")
-    //     }
-    //   })
-    // },
 
     // add_node(){
     //   let data = {
@@ -91,63 +92,29 @@ export default {
     //   this.send_request(url, data, type)
     // },
 
-    // edit_node_attribute(){
-    //   this.new_ele_attribute = this.clicked_ele_attribute
-    //   // this.new_ele_attribute = {'name':'Wang', 'age': 13, 'weight': 15}
-    //   // TODO:对属性进行修改
-    //   let data = {
-    //     "Node-Id": this.clicked_ele_id,
-    //     "Node-Attribute": this.new_ele_attribute
-    //   }
-    //   let url = config.graph_node_url
-    //   let type = 'put'
-    //   this.send_request(url, data, type)
-    // },
-
-    // edit_edge_attribute(){
-    //   this.new_ele_attribute = this.clicked_ele_attribute
-    //   // this.new_ele_attribute = {"like": "very", "time": 2}
-    //   // TODO:对属性进行修改
-    //   let data = {
-    //     "Edge-Id": this.clicked_ele_id,
-    //     "Edge-Attribute": this.new_ele_attribute
-    //   }
-    //   let url = config.graph_edge_url
-    //   let type = 'put'
-    //   this.send_request(url, data, type)
-    // },
-
 
     delete_ele(){
-      let data
-      if (this.clicked_ele_type === '节点') {
-        data = {
-          "Node-Id": this.clicked_ele_id
-        }
-      }else if (this.clicked_ele_type === '关系'){
-        data = {
-          "Edge-Id": this.clicked_ele_id
-        }
-      }
-      this.$emit('send_edit_request', data, 'delete', this.clicked_ele_type)
+      this.$emit('delete_ele')
     },
 
-    // delete_edge(){
-    //   let data = {
-    //     "Edge-Id": this.clicked_ele_id
-    //   }
-    //   let url = config.graph_edge_url
-    //   let type = 'delete'
-    //   this.send_request(url, data, type)
-    // },
+    // 对元素属性的添加、修改和删除都通过这个函数
+    edit_ele_attribute(key, value=null){
+      let attribute = this.clicked_ele_attribute
+      if (value === null){  // 只指明属性关键字，删除操作
+        delete attribute[key]
+      } else {  // 添加和修改
+        attribute[key] = value
+      }
+      this.$emit("edit_ele_attribute", attribute)
+    },
 
     set_main_attribute(key){
       // 只对节点有效
       if (this.clicked_ele_type !== '节点')
         return
       this.$emit("set_main_attribute", this.clicked_ele_label, key)
-
     }
+
   },
   components:{
     AttributeItem,
@@ -174,18 +141,20 @@ div{
   /*border-radius: 5px;*/
 }
 #clicked_ele_type{
-  font-size: 25px;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 4px;
   float: left;
   margin-left: 5%;
   margin-top: 10px;
-  color: #F3F8FB;
+  color: #FFFFFF;
 
 }
 #clicked_ele_id{
-  font-size: 20px;
+  font-size: 25px;
   float: right;
   margin-right: 5%;
-  margin-top: 20px;
+  margin-top: 15px;
   color: #B9E8F8
 }
 #labels{
@@ -213,12 +182,29 @@ div{
   border: 0;
   padding: 0;
   height: 40px;
+  color: #F3F8FB;
+  font-family: Source Han Sans CN,serif;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 1px;
+  transition-duration: 0.2s;
+  cursor: pointer;
+}
+#add_delete button:hover{
+  color: black;
+  background: whitesmoke;
+}
+#add_delete button:active{
+  border: 0;
 }
 #add_node{
-  background: green;
+  background: #3CA4EC;
+}
+#add_edge{
+  background: #04E474;
 }
 #delete_node{
-  background: red;
+  background: #EC2454;
 }
 #attribute{
   padding-left: 5%;

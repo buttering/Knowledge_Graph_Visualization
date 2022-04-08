@@ -66,6 +66,7 @@ export default {
   cursor: pointer;
   font-family: Source Han Sans CN,serif;
   font-size: 20px;
+  font-weight: 700;
   min-width: 100px;
 }
 #search-menu button:hover{
