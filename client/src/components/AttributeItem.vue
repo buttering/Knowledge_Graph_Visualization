@@ -2,9 +2,27 @@
   <div class="attribute-item">
     <span class="key">{{attr_key}}</span>
     <span class="value" contenteditable="true" @input="value_input_change">{{attr_value}}</span>
-    <button class="button" id="main_attribute" @click="set_main_attribute"></button>
-    <button class="button" id="save" @click="save_attribute"></button>
-    <button class="button" id="delete" @click="delete_attribute"></button>
+    <el-tooltip
+      effect="dark"
+      content="设为主属性"
+      placement="top"
+    >
+      <button class="button" id="main_attribute" @click="set_main_attribute"></button>
+    </el-tooltip>
+    <el-tooltip
+      effect="dark"
+      content="保存属性"
+      placement="top"
+    >
+      <button class="button" id="save" @click="save_attribute"></button>
+    </el-tooltip>
+    <el-tooltip
+      effect="dark"
+      content="删除属性"
+      placement="top"
+    >
+      <button class="button" id="delete" @click="delete_attribute"></button>
+    </el-tooltip>
   </div>
 </template>
 
@@ -54,7 +72,7 @@ export default {
   padding-top: 5px;
   padding-left: 2px;
   margin-right: 2px;
-  background-color: rgba(256, 256 ,256 ,0.6);
+  background-color: rgba(256, 256 ,256 ,0.8);
 }
 .value{
   flex: 2;
@@ -62,7 +80,7 @@ export default {
   vertical-align: middle;
   padding-top: 5px;
   padding-left: 2px;
-  background-color: rgba(256, 256 ,256 ,0.6);
+  background-color: rgba(256, 256 ,256 ,0.8);
   /*允许长单词换到下一行*/
   word-wrap: break-word;
 }

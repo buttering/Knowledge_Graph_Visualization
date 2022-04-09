@@ -50,7 +50,7 @@ export default {
   },
   props:{
     // clicked: Boolean,
-    clicked_ele_id: String,
+    clicked_ele_id: Number,
     clicked_ele_type: String,  //'节点' or '关系'
     clicked_ele_label: String,
     clicked_ele_attribute: Object,
@@ -160,8 +160,8 @@ div{
 }
 #labels div{
   float: left;
-  color: black;
-  background: orangered;
+  color: white;
+  background: #ECBC54;
   height: 20px;
   padding-left: 10px;
   padding-right: 10px;
@@ -193,9 +193,6 @@ div{
   border: 0;
 }
 #add_node{
-  background: #04E474;
-}
-#add_edge{
   background: #04E474;
 }
 #delete_node{

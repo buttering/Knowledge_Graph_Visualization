@@ -1,5 +1,4 @@
 <template>
-  <div>{{operation_mode}}</div>
   <div
       id="chart"
       style="width: 100%;height: 100%"
@@ -25,8 +24,13 @@
   />
   <add-bar
       v-show="show_add_bar"
+      v-if="clear_add_bar"
       :select_node_id="select_node_id"
+      :node_name_list="node_name_list"
+      :edge_name_list="edge_name_list"
+      :clicked_node_id="clicked_ele_id"
       @change_mode="change_mode"
+      @add_element="add_element"
   />
 </template>
 
@@ -100,6 +104,10 @@ export default {
     show_add_bar(){
       return this.operation_mode === 'add'
     },
+    clear_add_bar(){
+      return !(this.operation_mode === 'view' || this.operation_mode === 'edit')
+    }
+
   },
   methods:{
     /////////////////  网络请求方法  ///////////////////
@@ -172,11 +180,11 @@ export default {
       let url
       let that = this
       this.attribute_bar_loading = true  // 进入加载动画
-      if (type === '节点'){
+      if (type === '节点')
         url = config.graph_node_url
-      }else if(type === '关系'){
+      else if(type === '关系')
         url = config.graph_edge_url
-      }
+
       axios({
         url: url,
         method: method,
@@ -255,6 +263,27 @@ export default {
         })
       }
 
+    },
+    // 添加元素
+    add_element(new_type, new_label_or_type, new_attribute, source_id=null, target_id=null){
+      if (new_type === '节点'){
+        let data = {
+          "Node-Type": new_label_or_type,
+          "Node-Attribute": new_attribute
+        }
+        this.global_loading = true
+        this.send_edit_request(data, 'post', new_type, this.send_inquire_request)
+
+      }else if(new_type === '关系'){
+        let data = {
+          "Edge-Type": new_label_or_type,
+          "Edge-Attribute": new_attribute,
+          "Source-Node": source_id,
+          "Target-Node": target_id
+        }
+        this.global_loading = true
+        this.send_edit_request(data, 'post', new_type, this.send_inquire_request)
+      }
     },
     ///////////////  数据规格化方法  ////////////////////
     format_node(){
@@ -414,10 +443,11 @@ export default {
 
     // 选择节点或关系的事件处理函数
     select_element_event(param){
+      let ele_id = Number(param.data.id)
       // TODO 节点或关系失去焦点事件处理函数 [已完成]
       if (param.dataType === 'node' || param.dataType === 'edge') {
         // 再次点击退出编辑模式
-        if (this.operation_mode === 'edit' && this.clicked_ele_id === param.data.id) {  // 取消对元素的选择
+        if (this.operation_mode === 'edit' && this.clicked_ele_id === ele_id) {  // 取消对元素的选择
           this.operation_mode = 'view'
           return
         }
@@ -431,7 +461,7 @@ export default {
             this.clicked_ele_type = '关系'
             this.clicked_ele_label = param.data.type
           }
-          this.clicked_ele_id = param.data.id
+          this.clicked_ele_id = ele_id
           this.operation_mode = 'edit'
           this.clicked_ele_attribute = param.data.attribute
           return
@@ -439,7 +469,7 @@ export default {
 
         // 处于选择节点模式
         if (this.operation_mode === 'select' && param.dataType === 'node'){
-          this.select_node_id = param.data.id
+          this.select_node_id = ele_id
           this.operation_mode = 'add'
         }
       }

@@ -1,8 +1,23 @@
 <template>
-    <div class="attribute-item">
-    <span class="key" contenteditable="true" @input="input_key">{{new_attribute_key}}</span>
-    <span class="value" contenteditable="true" @input="input_value">{{new_attribute_value}}</span>
-    <button class="button" id="add_attribute" @click="add_attribute"></button>
+  <div class="attribute-item">
+    <span
+        class="key"
+        contenteditable="true"
+        @input="input_key"
+    >{{new_attribute_key}}</span>
+    <span
+        class="value"
+        contenteditable="true"
+        @input="input_value"
+    >{{new_attribute_value}}</span>
+    <el-tooltip
+      effect="dark"
+      content="添加属性"
+      placement="bottom"
+    >
+      <button class="button" id="add_attribute" @click="add_attribute"></button>
+    </el-tooltip>
+
   </div>
 </template>
 
@@ -14,7 +29,8 @@ export default {
   data(){
     return{
       new_attribute_key: "",
-      new_attribute_value: ""
+      new_attribute_value: "",
+      new_attribute_not_empty: false
     }
   },
   methods:{
@@ -33,6 +49,9 @@ export default {
       this.new_attribute_key = ''
       this.new_attribute_value = ''
     }
+  },
+  watch:{
+
   }
 }
 </script>
@@ -50,7 +69,7 @@ export default {
   padding-top: 5px;
   padding-left: 2px;
   margin-right: 2px;
-  background-color: rgba(256, 256 ,256 ,0.6);
+  background-color: rgba(256, 256 ,256 ,0.8);
   word-wrap: break-word;
 }
 .value{
@@ -59,7 +78,7 @@ export default {
   vertical-align: middle;
   padding-top: 5px;
   padding-left: 2px;
-  background-color: rgba(256, 256 ,256 ,0.6);
+  background-color: rgba(256, 256 ,256 ,0.8);
   word-wrap: break-word;
 }
 .button{

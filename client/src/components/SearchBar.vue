@@ -1,7 +1,7 @@
 <template>
   <div id="search-menu">
-    <input @click=search placeholder="请输入...">
-    <button class='button' id="search" @click="search">条件搜索</button>
+    <button id="input" @click="list_element">点击选择元素</button>
+    <button id="search" @click="search">条件搜索</button>
   </div>
 </template>
 
@@ -19,6 +19,12 @@ export default {
     node_name_list: Array
   },
   methods:{
+    list_element(){
+      
+    },
+    construct_cypher(){
+
+    },
     search(){
       //TODO：构建搜索语句
 
@@ -42,7 +48,7 @@ export default {
   display: flex;
   flex-direction: row;
 }
-#search-menu input{
+#input{
   float: left;
   flex: 10;
   height: 100%;
@@ -54,11 +60,11 @@ export default {
   border-style: none;
 
 }
-#search-menu button{
+#search{
   float: right;
   flex: 1;
   height: 100%;
-  background-color: #B9E8F8;
+  background-color: #E4F4FC;
   color: black;
   border-style: none;
   outline: none;
@@ -67,13 +73,14 @@ export default {
   font-family: Source Han Sans CN,serif;
   font-size: 20px;
   font-weight: 700;
+  letter-spacing: 2px;
   min-width: 100px;
 }
-#search-menu button:hover{
+#search:hover{
   background-color: rgb(120, 120, 120);
   color: white;
 }
-#search-menu button:active{
+#search:active{
   background-color: #000000;
 }
 </style>
