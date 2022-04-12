@@ -1,5 +1,5 @@
 <template>
-  <div id="edit-bar" v-loading="loading"  element-loading-text="修改中">
+  <el-scrollbar id="edit-bar" v-loading="loading"  element-loading-text="修改中">
     <div id="type_id">
       <span id="clicked_ele_type">{{ clicked_ele_type }}</span>
       <span id="clicked_ele_id">{{ '#' + clicked_ele_id }}</span>
@@ -34,7 +34,7 @@
       />
     </div>
 
-  </div>
+  </el-scrollbar>
 </template>
 
 <script>

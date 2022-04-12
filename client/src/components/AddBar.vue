@@ -1,5 +1,5 @@
 <template>
-  <div id="add-bar">
+  <el-scrollbar id="add-bar">
     <el-radio-group id="type-button" v-model="
     new_type">
       <el-radio-button label="节点"/>
@@ -70,7 +70,7 @@
       <el-button id="exit" @click="exit_add_mode">取消</el-button>
       <el-button id="submit" @click="on_submit">提交</el-button>
     </div>
-  </div>
+  </el-scrollbar>
 </template>
 
 <script>

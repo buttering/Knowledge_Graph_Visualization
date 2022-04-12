@@ -1,15 +1,19 @@
 <template>
+  <div>{{operation_mode}}</div>
   <div
       id="chart"
       style="width: 100%;height: 100%"
       v-loading="global_loading"  element-loading-text="查询中"></div>
 
   <SearchBar
-      v-show="show_search_bar"
+      v-if="show_search_bar"
       :node_name_list="node_name_list"
       :edge_name_list="edge_name_list"
+      :show_built_bar="show_built_bar"
       @inquire="send_inquire_request"
+      @change_mode="change_mode"
   />
+
   <edit-bar
       v-show="show_edit_bar"
       :clicked_ele_id="clicked_ele_id"
@@ -66,7 +70,7 @@ export default {
       clicked_ele_attribute: null,
       // clicked: false,
 
-      // 以下变量需要传递给SearchBar和AddBar
+      // 以下变量需要传递给EditBar和AddBar
       node_name_list: [],
       edge_name_list: [],
 
@@ -76,7 +80,7 @@ export default {
       nodes: [],
       edges: [],
 
-      cypher_sentiment: "",
+      cypher_statement: "",
 
       main_attribute: {},  // 展示在节点上的属性,每种标签的节点可定制一个属性名
 
@@ -88,6 +92,7 @@ export default {
       // "edit":编辑模式;
       // "add":添加元素模式;
       // "select“:选择模式
+      // “built”:构建cypher语句模式
       operation_mode: "init"
     }
   },
@@ -96,13 +101,16 @@ export default {
   },
   computed: {
     show_search_bar(){
-      return this.operation_mode === 'view' || this.operation_mode === 'edit'
+      return this.operation_mode === 'view' || this.operation_mode === 'edit' || this.operation_mode === 'built'
     },
     show_edit_bar(){
       return this.operation_mode === 'edit'
     },
     show_add_bar(){
       return this.operation_mode === 'add'
+    },
+    show_built_bar(){
+      return this.operation_mode === 'built'
     },
     clear_add_bar(){
       return !(this.operation_mode === 'view' || this.operation_mode === 'edit')
@@ -112,11 +120,11 @@ export default {
   methods:{
     /////////////////  网络请求方法  ///////////////////
     // 所有查询都通过这个方法进行
-    send_inquire_request(cypher_sentiment = null, return_type = null){
+    send_inquire_request(cypher_statement = null, return_type = null){
       const that = this;
       this.global_loading = true
       // 查询所有节点和关系，直接访问url即可
-      if (cypher_sentiment === null){
+      if (cypher_statement === null){
         axios.get(config.graph_url).then(function (response){
           // 回调函数中this指向会改变，所以先用that保存Vue对象指针that.node_name_list = response.data.msg.node_name_list
           that.node_name_list = response.data.msg.node_name_list
@@ -151,7 +159,7 @@ export default {
           method: 'post',
           url: config.graph_url,
           data:{
-            "Cypher-Sentiment": cypher_sentiment,
+            "Cypher-statement": cypher_statement,
             "Return-Type": return_type
           }
         }).then(function (response){
@@ -487,6 +495,10 @@ export default {
 
     // 切换模式相关动作
     change_mode(mode){
+      if (this.operation_mode === 'built' && mode === 'built'){
+        this.operation_mode = 'view'
+        return
+      }
       this.operation_mode = mode
     }
   },
@@ -519,7 +531,7 @@ export default {
   components: {
     SearchBar,
     EditBar,
-    AddBar
+    AddBar,
   }
 }
 </script>
