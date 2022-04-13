@@ -1,5 +1,4 @@
 <template>
-  <div>{{operation_mode}}</div>
   <div
       id="chart"
       style="width: 100%;height: 100%"
@@ -401,7 +400,7 @@ export default {
             roam: true,  // 开启鼠标缩放和平移漫游
             draggable: true,  // 节点可拖拽
             lineStyle:{  // 边的样式
-              width: 4,
+              width: 6,
               curveness: 0.1
             },
             selectedMode: true,  // 是否可选中

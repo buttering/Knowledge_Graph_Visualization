@@ -63,6 +63,7 @@
       />
       <NewAttributeItem
         @add_attribute="edit_ele_attribute"
+        @new_attribute_item="new_attribute_item"
       />
     </div>
 
@@ -88,7 +89,9 @@ export default {
 
       new_type: '关系',  // '节点' or '关系'
       new_label_type: '',
-      new_attribute: {}
+      new_attribute: {},
+
+      new_attribute_item_key: ""  // 用于判断是否有未提交新建属性
     }
   },
   props: {
@@ -130,6 +133,10 @@ export default {
         this.new_attribute[key] = value
     },
     on_submit(){
+      if (this.new_attribute_item_key !== ""){
+        this.$message.warning("存在未保存属性！")
+        return
+      }
       if (this.new_type === '节点'){
         if (this.new_label_type === ''){
           this.$message.warning("请输入节点标签！")
@@ -137,8 +144,12 @@ export default {
         }
         this.$emit("add_element", this.new_type, this.new_label_type, this.new_attribute )
       } else if (this.new_type === '关系') {
-        if (this.source_node_id < 0 || this.target_node_id < 0) {
-          this.$message.warning("请选择起始节点！")
+        if (this.source_node_id < 0 ) {
+          this.$message.warning("请选择关系的起始节点！")
+          return
+        }
+        if (this.target_node_id < 0){
+          this.$message.warning("请选择关系的目标节点！")
           return
         }
         if (this.new_label_type === ''){
@@ -147,6 +158,9 @@ export default {
         }
         this.$emit("add_element", this.new_type, this.new_label_type, this.new_attribute, this.source_node_id, this.target_node_id)
       }
+    },
+    new_attribute_item(key){
+      this.new_attribute_item_key = key
     }
   },
   watch: {

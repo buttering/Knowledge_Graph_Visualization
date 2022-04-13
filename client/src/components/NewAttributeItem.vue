@@ -30,7 +30,6 @@ export default {
     return{
       new_attribute_key: "",
       new_attribute_value: "",
-      new_attribute_not_empty: false
     }
   },
   methods:{
@@ -51,7 +50,11 @@ export default {
     }
   },
   watch:{
-
+    new_attribute_key: {
+      handler(){
+        return this.$emit("new_attribute_item", this.new_attribute_key)
+      }
+    }
   }
 }
 </script>
