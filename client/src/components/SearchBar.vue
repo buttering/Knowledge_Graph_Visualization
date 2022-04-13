@@ -72,9 +72,9 @@ export default {
       }
       return list
     },
-    generate_show_statement(){  // 展示给用户的字符
+    generate_show_statement(){  // 展示给用户的字符串
       if (this.built_list.length <= 0){
-        return "点击图标选择元素"
+        return "点我进行条件搜索"
       }
       let statement = ""
       for (let i = 0; i < this.built_list.length; i++){
@@ -99,13 +99,54 @@ export default {
       this.element_list = []
       this.built_list = []
     },
+    // 构建cypher语句，进行条件搜索
     search(){
-      //TODO：构建搜索语句
+      function next_code_name(char){
+        return String.fromCharCode(char.charCodeAt(0) + 1)
+      }
+      let cypher_statement
+      let return_type = []
 
-      let cypher_statement = "MATCH (n)-[r]-(m) RETURN n, r, m"
-      let return_type = ["N", "R", "N"]
+      if (this.built_list.length <= 0) {
+        cypher_statement = "MATCH (n)-[r]-(m) RETURN n, r, m"
+        return_type = ["N", "R", "N"]
+      } else {
+        cypher_statement = "MATCH"
+        let code_name = 'a'
+        let code_name_list = []
+        for (let index in this.built_list){
+          code_name_list.push(code_name)
+          if (this.built_list[index].key === "" && this.built_list[index].type === '节点'){  // 占位节点
+            cypher_statement += "(" + code_name + ")"
+            return_type.push("N")
+          } else if (this.built_list[index].key === "" && this.built_list[index].type === '关系'){  // 占位关系
+            cypher_statement += "-[" + code_name + "]-"
+            return_type.push("R")
+          } else if (this.built_list[index].type === '节点'){
+            cypher_statement += "(" + code_name + ":" + this.built_list[index].key + ")"
+            return_type.push("N")
+          } else if (this.built_list[index].direction === 'none'){
+            cypher_statement += "-[" + code_name + ":" + this.built_list[index].key + "]-"
+            return_type.push("R")
+          } else if (this.built_list[index].direction === 'left'){
+            cypher_statement += "<-[" + code_name + ":" + this.built_list[index].key + "]-"
+            return_type.push("R")
+          } else {
+            cypher_statement += "-[" + code_name + ":" + this.built_list[index].key + "]->"
+            return_type.push("R")
+          }
+          code_name = next_code_name(code_name)
+        }
+
+        cypher_statement += "RETURN"
+        for (let index in code_name_list){
+          cypher_statement += " " + code_name_list[index]
+          if (index < code_name_list.length - 1)
+            cypher_statement += ","
+        }
+      }
+      console.log("Send cypher inquire:", cypher_statement)
       this.$emit('inquire', cypher_statement, return_type)
-      
     },
     random_color(){
       let col = "#";
@@ -134,6 +175,11 @@ export default {
         list.unshift({type: '节点', key: '', direction: ''})
       if (list[list.length - 1].type === '关系')
         list.push({type: '节点', key: '', direction: ''})
+      if (list.length >= 24){
+        this.$message.warning("不能超过24个元素")
+        this.clear_statement()
+        return;
+      }
       this.built_list = list
     }
   },
@@ -172,8 +218,9 @@ export default {
   float: left;
   flex: 1;
   height: 100%;
-  background-color: #FC9C9C;
-  color: black;
+  /*background-color: #FC9C9C;*/
+  background-color: #C40404;
+  color: white;
   border-style: none;
   outline: none;
   transition-duration: 0.2s;
@@ -188,8 +235,8 @@ export default {
   float: right;
   flex: 1;
   height: 100%;
-  background-color: #E4F4FC;
-  color: black;
+  background-color: #4EAC55;
+  color: white;
   border-style: none;
   outline: none;
   transition-duration: 0.2s;
@@ -202,17 +249,19 @@ export default {
 }
 #clear:hover{
   background-color: rgb(120, 120, 120);
-  color: white;
+  color: black;
 }
 #search:hover{
   background-color: rgb(120, 120, 120);
-  color: white;
+  color: black;
 }
 #clear:active{
-  background-color: #000000;
+  background-color: black;
+  color: white;
 }
 #search:active{
-  background-color: #000000;
+  background-color: black;
+  color: white;
 }
 
 #cypher-bar{

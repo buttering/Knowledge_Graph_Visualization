@@ -42,10 +42,10 @@ class KnowledgeGraph(Resource):
     def post(self):
         # TODO: 检验是否是查询语句
         request_data = request.get_json()
-        cypher_sentiment = request_data.get('Cypher-Sentiment')
+        cypher_statement = request_data.get('Cypher-Statement')
         return_type = request_data.get('Return-Type')
-        print("get query: ", cypher_sentiment)
-        result = exec_cypher(cypher_sentiment, return_type)
+        print("get query: ", cypher_statement)
+        result = exec_cypher(cypher_statement, return_type)
         print("return msg number: nodes-", len(result['nodes']), " edges-", len(result['edges']))
         json_dic = {
             "code": 200,
@@ -189,8 +189,8 @@ class Test(Resource):
 ######## 数据库操作
 
 
-def exec_cypher(cypher_sentiment: str, return_type: list) -> dict:
-    cursor = graph.run(cypher_sentiment)
+def exec_cypher(cypher_statement: str, return_type: list) -> dict:
+    cursor = graph.run(cypher_statement)
     node_list = []
     edge_list = []
     # 取出节点对象和关系对象
@@ -285,16 +285,16 @@ def return_exception_code(code: int, msg: str):
 #
 #
 # # 执行Cypher指令
-# def exec_read(cypher_sentiment: str):
+# def exec_read(cypher_statement: str):
 #     db = get_db()
 #
 #     def run_tx(tx):
-#         return tx.run(cypher_sentiment)
+#         return tx.run(cypher_statement)
 #
 #     return db.read_transaction(run_tx)
 #
 #
-# def exec_write(cypher_sentiment: str):
+# def exec_write(cypher_statement: str):
 #     db = get_db()
 
 

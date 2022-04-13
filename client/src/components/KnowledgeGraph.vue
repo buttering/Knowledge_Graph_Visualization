@@ -159,10 +159,15 @@ export default {
           method: 'post',
           url: config.graph_url,
           data:{
-            "Cypher-statement": cypher_statement,
+            "Cypher-Statement": cypher_statement,
             "Return-Type": return_type
           }
         }).then(function (response){
+          if (response.data.msg.nodes.length <= 0){
+            that.$message.error("没有匹配项！")
+            that.global_loading = false  // 关闭加载动画
+            return
+          }
           that.nodes = response.data.msg.nodes
           that.edges = response.data.msg.edges
           console.log('Get data:', response.data.msg)
@@ -170,6 +175,8 @@ export default {
           that.operation_mode = 'view' // 关闭编辑面板
         }).catch(error=>{
           that.$message.error('查询失败')
+          that.global_loading = false
+          that.operation_mode = 'view'
           if (error.response) {
             console.log(error.response.data);
             console.log(error.response.status);

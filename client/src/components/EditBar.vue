@@ -180,7 +180,7 @@ div{
   color: #F3F8FB;
   font-family: Source Han Sans CN,serif;
   font-weight: 500;
-  font-size: 15px;
+  font-size: 18px;
   letter-spacing: 1px;
   transition-duration: 0.2s;
   cursor: pointer;
@@ -193,10 +193,12 @@ div{
   border: 0;
 }
 #add_node{
-  background: #04E474;
+  /*background: #04E474;*/
+  background-color: #4EAC55;
 }
 #delete_node{
-  background: #EC2454;
+  /*background: #EC2454;*/
+  background-color: #C40404;
 }
 #attribute{
   padding-left: 5%;

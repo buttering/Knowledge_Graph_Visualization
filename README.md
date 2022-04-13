@@ -95,8 +95,8 @@ HTTP POST
 
 ```json
 {
-  "Cypher-Sentiment": Cypher sentiment,
-  "Return-Type": Py2Neo object type list in Cypher sentiment by order
+  "Cypher-Statement": Cypher statement,
+  "Return-Type": Py2Neo object type list in Cypher statement by order
 }
 ```
 
