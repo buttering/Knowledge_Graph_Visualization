@@ -146,15 +146,15 @@ HTTP POST
 
 ### 1) address
 
-/user/sign
+/session
 
 ### 2) type
 
-HTTP GET/POST/DELETE
+HTTP POST/DELETE
 
 ### 3) description
 
-用户登录操作，GET用于请求登录界面，POST用于提交登录信息,DELETE用于登出用户。
+用户登录操作，POST用于提交登录信息,DELETE用于登出用户。
 
 ### 4） return(post)
 
@@ -180,15 +180,15 @@ HTTP GET/POST/DELETE
 
 ### 1) address
 
-/user/register
+/user
 
 ### 2) type
 
-HTTP GET/POST
+HTTP POST
 
 ### 3) description
 
-用户注册操作，GET用于请求注册页面，POST用于提交注册信息
+用户注册操作，POST用于提交注册信息
 
 ### 4） request body format(post)
 
@@ -196,17 +196,19 @@ HTTP GET/POST
 {
   "username": user name,
   "password": password,
-  "email": e-mail
+  "email": e-mail,
+  "type": User's role in system,
+  "code": Invitation code for expert role certification
 }
 ```
 
-### 5) retrun(post)
+### 5) return(post)
 
 - success
 
 ```json
 {
-  "code": 500,
+  "code": 200,
   "msg": "Registration Completed"
 }
 ```

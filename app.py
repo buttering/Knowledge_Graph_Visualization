@@ -2,17 +2,39 @@ from flask import Flask, redirect, url_for, g, request, jsonify
 from neo4j import GraphDatabase
 from flask_restful_swagger_2 import Api, Resource
 from py2neo import Graph, Node, NodeMatcher, Subgraph, Relationship, RelationshipMatcher
+from flask_sqlalchemy import SQLAlchemy
 
 import config
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False  # 避免json中文乱码
+app.config.from_object(config)
 api = Api(app, title='Knowledge Graph')
 
-graph = Graph(config.DATABASE_URL, auth=(config.DATABASE_USERNAME, config.DATABASE_PASSWORD))
+# 图数据库
+graph = Graph(config.DATABASE_URL, auth=(app.config['DATABASE_USERNAME'], app.config['DATABASE_PASSWORD']))
+# 关系型数据库
+db = SQLAlchemy(app)
 
 
 ######## 路由操作
+
+
+class UserModel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)  # 自增主键
+    username = db.Column(db.String(80), nullable=False)
+    password = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    type = db.Column(db.String(20))
+
+    def __init__(self, username, password, email, type):
+        self.username = username
+        self.password = password
+        self.email = email
+        self.type = type
+
+    def __repr__(self):
+        return '<User %r>' % self.username
 
 
 class KnowledgeGraph(Resource):
@@ -162,20 +184,23 @@ class RelationshipRoute(Resource):
         return return_deleted_relationship(1)
 
 
+# 注册
 class User(Resource):
-    def get(self):
-        return ''
 
     def post(self):
-        return ''
+        request_data = request.get_json()
+        username = request_data['username']
 
-    def delete(self):
-        return ''
+        if UserModel.query.filter_by(username=request_data['username']).first():
+            return return_exception_code(401, 'Duplicate Username')
+        else:
+            db.session.add(UserModel(**request_data))
+            db.session.commit()
+            return return_exception_code(200, 'Registration Completed')
 
+# 登录
+class Session(Resource):
 
-class Register(Resource):
-    def get(self):
-        return ''
 
     def post(self):
         return ''
@@ -299,9 +324,9 @@ def return_exception_code(code: int, msg: str):
 
 
 ######## 注册api
-api.add_resource(KnowledgeGraph, '/graph')
+api.add_resource(KnowledgeGraph, '/graph', '/')
 api.add_resource(User, '/user')
-api.add_resource(Register, '/register')
+api.add_resource(Session, '/session')
 api.add_resource(Test, '/t')
 api.add_resource(NodeRoute, '/graph/node')
 api.add_resource(RelationshipRoute, '/graph/edge')
