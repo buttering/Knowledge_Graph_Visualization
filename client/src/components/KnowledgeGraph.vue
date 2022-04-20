@@ -2,7 +2,10 @@
   <div
       id="chart"
       style="width: 100%;height: 100%"
-      v-loading="global_loading"  element-loading-text="查询中"></div>
+      v-loading="global_loading"
+      element-loading-text="查询中">
+
+  </div>
 
   <SearchBar
       v-if="show_search_bar"
@@ -96,7 +99,8 @@ export default {
     }
   },
   props:{
-
+    token: String,
+    username: String
   },
   computed: {
     show_search_bar(){
@@ -158,6 +162,7 @@ export default {
           method: 'post',
           url: config.graph_url,
           data:{
+            "username": this.username,
             "Cypher-Statement": cypher_statement,
             "Return-Type": return_type
           }
@@ -189,7 +194,7 @@ export default {
         });
       }
     },
-    // 进行编辑请求
+    // 进行编辑请求 需要jwt认证
     send_edit_request(data, method, type, call_back){
       let url
       let that = this
@@ -198,7 +203,8 @@ export default {
         url = config.graph_node_url
       else if(type === '关系')
         url = config.graph_edge_url
-
+      data.token = this.token
+      data.username = this.username
       axios({
         url: url,
         method: method,
@@ -208,8 +214,13 @@ export default {
           // 全局刷新
           console.log('Success to',method, type, ':', data)
           call_back()  // 若操作成功，运行自定义回调函数
-          that.attribute_bar_loading = false
+        } else if (response.data.code === 500){
+          that.$message.error('登录失效！')
+          that.$emit('need_login')
+        } else if(response.data.code === 501){
+          that.$message.error('没有权限进行编辑！')
         }
+        that.attribute_bar_loading = false
       }).catch(error=>{
         that.$message.error('修改失败！')
         that.attribute_bar_loading = false

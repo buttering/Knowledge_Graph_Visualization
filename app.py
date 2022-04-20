@@ -3,6 +3,8 @@ from neo4j import GraphDatabase
 from flask_restful_swagger_2 import Api, Resource
 from py2neo import Graph, Node, NodeMatcher, Subgraph, Relationship, RelationshipMatcher
 from flask_sqlalchemy import SQLAlchemy
+import jwt
+from flask_login import LoginManager
 
 import config
 
@@ -16,8 +18,10 @@ graph = Graph(config.DATABASE_URL, auth=(app.config['DATABASE_USERNAME'], app.co
 # 关系型数据库
 db = SQLAlchemy(app)
 
+INVITATION_CODE = 'abcd'
 
-######## 路由操作
+
+######## 用户鉴权
 
 
 class UserModel(db.Model):
@@ -27,7 +31,7 @@ class UserModel(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     type = db.Column(db.String(20))
 
-    def __init__(self, username, password, email, type):
+    def __init__(self, username, password, email, type, code):
         self.username = username
         self.password = password
         self.email = email
@@ -35,6 +39,38 @@ class UserModel(db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.username
+
+
+def token_decode(token, username):
+    try:
+        payload = jwt.decode(token, app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
+        if payload['username'] == username:
+            if payload['type'] == 'common':
+                return 0
+            elif payload['type'] == 'specialist' or payload['type'] == 'administrator':
+                return 3
+        return 1  # invalid token
+    except jwt.ExpiredSignatureError:
+        return 2  # expired signature
+    except jwt.InvalidTokenError:
+        return 1  # invalid token
+
+
+def login_required(func):
+    def wrapper(*args, **kwargs):
+        request_data = request.get_json()
+        jwt_answer = token_decode(request_data.get('token'), request_data.get('username'))
+        if jwt_answer == 3:
+            return func(*args, **kwargs)
+        if jwt_answer == 0:
+            return return_exception_code(501, 'Insufficient Permissions')
+        return return_exception_code(500, "Token invalid!")
+
+    return wrapper
+
+
+
+######## 路由操作
 
 
 class KnowledgeGraph(Resource):
@@ -81,6 +117,7 @@ class KnowledgeGraph(Resource):
 
 
 class NodeRoute(Resource):
+    @login_required
     def post(self):
         request_data = request.get_json()
         node_label = request_data.get('Node-Type')
@@ -95,6 +132,7 @@ class NodeRoute(Resource):
 
         return return_deleted_relationship(1)
 
+    @login_required
     def put(self):
         request_data = request.get_json()
         node_attributes = request_data.get('Node-Attribute')
@@ -114,6 +152,7 @@ class NodeRoute(Resource):
 
         return return_deleted_relationship(1)
 
+    @login_required
     def delete(self):
         request_data = request.get_json()
         node_id = int(request_data.get('Node-Id'))
@@ -129,6 +168,7 @@ class NodeRoute(Resource):
 
 
 class RelationshipRoute(Resource):
+    @login_required
     def post(self):
         request_data = request.get_json()
         relationship_type = request_data.get('Edge-Type')
@@ -150,6 +190,7 @@ class RelationshipRoute(Resource):
 
         return return_deleted_relationship(1)
 
+    @login_required
     def put(self):
         request_data = request.get_json()
         relationship_ID = int(request_data.get('Edge-Id'))
@@ -169,6 +210,7 @@ class RelationshipRoute(Resource):
 
         return return_deleted_relationship(1)
 
+    @login_required
     def delete(self):
         request_data = request.get_json()
         relationship_ID = int(request_data.get('Edge-Id'))
@@ -189,26 +231,35 @@ class User(Resource):
 
     def post(self):
         request_data = request.get_json()
-        username = request_data['username']
 
-        if UserModel.query.filter_by(username=request_data['username']).first():
-            return return_exception_code(401, 'Duplicate Username')
+        if UserModel.query.filter_by(username=request_data.get('username')).first():
+            return return_exception_code(401, 'Duplicate Username!')
+        elif request_data.get('type') != 'common' and request_data.get('code') != INVITATION_CODE:
+            return return_exception_code(404, "Invalid Invitation Code!")
+        elif UserModel.query.filter_by(email=request_data.get('email')).first():
+            return return_exception_code(402, "Repeat email!")
         else:
             db.session.add(UserModel(**request_data))
             db.session.commit()
-            return return_exception_code(200, 'Registration Completed')
+            return return_exception_code(200, 'Registration Completed!')
+
 
 # 登录
 class Session(Resource):
 
-
     def post(self):
-        return ''
+        def token_encode(payload: dict):
+            # header和payload可以直接利用base64解码出原文，从header中获取哈希签名的算法，从payload中获取有效数据
+            # signature由于使用了不可逆的加密算法，无法解码出原文，它的作用是校验token有没有被篡改。
+            return jwt.encode(payload, app.config['JWT_SECRET_KEY'], algorithm='HS256')
 
-
-class Test(Resource):
-    def get(self):
-        return test()
+        request_data = request.get_json()
+        user = UserModel.query.filter_by(username=request_data.get('username'),
+                                         password=request_data.get('password')).first()
+        if user:
+            token = token_encode({'username': user.username, 'type': user.type})
+            return return_msg_with_token(200, 'Validation Completed', token=token)
+        return return_exception_code(401, "Validation fails")
 
 
 ######## 数据库操作
@@ -273,6 +324,8 @@ def serialize_edge(edge):
     return data
 
 
+
+
 ####### 返回格式化
 
 def return_deleted_relationship(number: int):
@@ -288,6 +341,14 @@ def return_exception_code(code: int, msg: str):
     return jsonify({
         "code": code,
         "msg": msg
+    })
+
+
+def return_msg_with_token(code: int, msg: str, token: str = None):
+    return jsonify({
+        "code": code,
+        "msg": msg,
+        "token": token
     })
 
 
@@ -327,23 +388,8 @@ def return_exception_code(code: int, msg: str):
 api.add_resource(KnowledgeGraph, '/graph', '/')
 api.add_resource(User, '/user')
 api.add_resource(Session, '/session')
-api.add_resource(Test, '/t')
 api.add_resource(NodeRoute, '/graph/node')
 api.add_resource(RelationshipRoute, '/graph/edge')
-
-
-def test():
-    def test1():
-        pass
-        # cypher_snetiment = 'match (movie:Movie) return movie'
-        # result = exec_cypher(cypher_snetiment)
-        # print(type(result))
-        # # while result.forward():
-        # #     print(result.current)
-        # return result.data()  # 此方法返回字典
-
-    return test1()
-
 
 if __name__ == '__main__':
     app.run()

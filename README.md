@@ -156,7 +156,16 @@ HTTP POST/DELETE
 
 用户登录操作，POST用于提交登录信息,DELETE用于登出用户。
 
-### 4） return(post)
+### 4） request body format(post)
+
+```json
+{
+  "username": user name,
+  "password": password
+}
+```
+
+### 5） return(post)
 
 - success
 
@@ -175,6 +184,20 @@ HTTP POST/DELETE
   "msg": "Validation fails"
 }
 ```
+- token invalid
+
+```json
+{
+  "code": 500,
+  "msg": "token invalid!"
+}
+
+```json
+{
+  "code": 501,
+  "msg": "Insufficient Permissions"
+}
+
 
 ## 4.用户注册
 
@@ -201,6 +224,12 @@ HTTP POST
   "code": Invitation code for expert role certification
 }
 ```
+
+*Explanation: role type:*
+
+- common：Can only browse KG
+- specialist: Can also edit KG
+- administrator: Can manage KG by log
 
 ### 5) return(post)
 
@@ -236,6 +265,13 @@ HTTP POST
 }
 ```
 
+```json
+{
+  "code": 404,
+  "msg" : "Invalid Invitation Code!"
+}
+```
+
 ## 5. 节点操作
 
 ### 1）address
@@ -249,6 +285,7 @@ HTTP POST/PUT/DELETE
 ### 3) description
 
 对节点进行增加（POST）、删除（DELETE）以及对节点属性进行修改（PUT）
+需要鉴权
 
 ### 4） request body format
 
@@ -315,6 +352,7 @@ HTTP POST/PUT/DELETE
 ### 3) description
 
 对关系进行增加（POST）、删除（DELETE）以及对关系属性进行修改（PUT）。
+需要鉴权
 
 ### 4） request body format
 
